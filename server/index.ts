@@ -1,12 +1,6 @@
 import express, { type Request, type Response } from 'express'
-import fs from 'fs'
-import path from 'path'
-
 const PORT = Number(process.env.PORT || process.env.BACKEND_PORT || 3001)
-const COUPON_CODE = process.env.COUPON_CODE || 'CM251222G2'
-
 const app = express()
-const outputCurriculumPath = path.join(process.cwd(), 'server', 'curriculum.json')
 
 app.get('/api/health', (_req: Request, res: Response) => {
   res.json({ ok: true })
@@ -50,9 +44,7 @@ app.get('/api/curriculum', async (req: Request, res: Response) => {
       return
     }
 
-    const curriculumUrl = `https://www.udemy.com/api-2.0/course-landing-components/${courseId}/me/?couponCode=${encodeURIComponent(
-      COUPON_CODE,
-    )}&components=curriculum_context`
+    const curriculumUrl = `https://www.udemy.com/api-2.0/course-landing-components/${courseId}/me/?components=curriculum_context`
     console.log('[curriculum] GET curriculum', curriculumUrl)
     const curriculumResp = await fetch(curriculumUrl)
     if (!curriculumResp.ok) {
@@ -66,9 +58,6 @@ app.get('/api/curriculum', async (req: Request, res: Response) => {
     }
 
     const curriculum = await curriculumResp.json()
-    fs.writeFile(outputCurriculumPath, JSON.stringify(curriculum, null, 2), (err) => {
-      if (err) console.warn('[curriculum] failed to write curriculum.json', err)
-    })
     res.json(curriculum)
   } catch (error) {
     console.error('Curriculum fetch failed', target, error)
