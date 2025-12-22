@@ -6,6 +6,7 @@ export type Lesson = {
 
 export type CourseSchema = {
   name?: string
+  courseTitle?: string
   description?: string
   sectionCount?: number
   syllabusSections?: Array<{
@@ -70,10 +71,12 @@ export const lessonsFromCurriculum = (
     (data as { curriculum_context?: { data?: unknown } })?.curriculum_context?.data ||
     (data as { data?: unknown })?.data
   const sections = (context as { sections?: unknown[] } | undefined)?.sections
+  const courseTitle = (data as { courseTitle?: string } | undefined)?.courseTitle
   if (!Array.isArray(sections)) return { lessons, courseSchema: null }
 
   const courseSchema: CourseSchema = {
-    name: (context as { title?: string } | undefined)?.title,
+    name: (context as { title?: string } | undefined)?.title || courseTitle,
+    courseTitle: courseTitle || (context as { title?: string } | undefined)?.title,
     syllabusSections: [],
     sectionCount: sections.length,
   }

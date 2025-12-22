@@ -37,7 +37,7 @@ app.get('/api/curriculum', async (req: Request, res: Response) => {
       return
     }
 
-    const courseMeta = (await courseMetaResp.json()) as { id?: number }
+    const courseMeta = (await courseMetaResp.json()) as { id?: number; title?: string }
     const courseId = courseMeta.id
     if (!courseId) {
       res.status(400).send('Course ID not found in course metadata')
@@ -58,6 +58,9 @@ app.get('/api/curriculum', async (req: Request, res: Response) => {
     }
 
     const curriculum = await curriculumResp.json()
+    if (courseMeta.title) {
+      ;(curriculum as Record<string, unknown>).courseTitle = courseMeta.title
+    }
     res.json(curriculum)
   } catch (error) {
     console.error('Curriculum fetch failed', target, error)

@@ -215,6 +215,11 @@ function App() {
           {courseInfo.description && (
             <p className="course-form__hint">{courseInfo.description}</p>
           )}
+          {courseInfo.courseTitle && (
+            <p className="course-form__hint">
+              Fetched course title: <strong>{courseInfo.courseTitle}</strong>
+            </p>
+          )}
         </section>
       )}
 
