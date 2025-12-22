@@ -1,4 +1,4 @@
-.app-shell {
+.app {
   max-width: 1100px;
   margin: 0 auto;
   padding: 48px 20px 72px;
@@ -9,7 +9,11 @@
 }
 
 .hero {
-  background: linear-gradient(135deg, rgba(74, 115, 255, 0.4), rgba(39, 202, 255, 0.35));
+  background: linear-gradient(
+    135deg,
+    rgba(74, 115, 255, 0.4),
+    rgba(39, 202, 255, 0.35)
+  );
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 18px;
   padding: 28px;
@@ -26,7 +30,7 @@
   line-height: 1.15;
 }
 
-.hero__text .lede {
+.hero__text .hero__lede {
   margin: 0;
   color: #d7deeb;
   max-width: 620px;
@@ -43,13 +47,17 @@
   color: #e7ecf6;
 }
 
-.eyebrow {
+.hero__eyebrow {
   margin: 0;
   color: #93b8ff;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   font-size: 12px;
   font-weight: 600;
+}
+
+.hero__lede {
+  margin: 0;
 }
 
 .panel {
@@ -60,24 +68,24 @@
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
 }
 
-.url-form {
+.course-form {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.url-form label {
+.course-form label {
   font-weight: 600;
   color: #c6d4f1;
 }
 
-.url-form__row {
+.course-form__row {
   display: flex;
   gap: 10px;
   align-items: center;
 }
 
-.url-form input {
+.course-form input {
   flex: 1;
   padding: 12px 14px;
   border-radius: 10px;
@@ -87,12 +95,12 @@
   font-size: 16px;
 }
 
-.url-form input:focus {
+.course-form input:focus {
   outline: 2px solid rgba(116, 181, 255, 0.75);
   outline-offset: 2px;
 }
 
-.url-form button {
+.course-form button {
   background: linear-gradient(120deg, #7cd7ff, #4a73ff);
   border: none;
   padding: 12px 16px;
@@ -105,18 +113,18 @@
   min-width: 170px;
 }
 
-.url-form button:hover {
+.course-form button:hover {
   transform: translateY(-1px);
   box-shadow: 0 12px 35px rgba(74, 115, 255, 0.45);
 }
 
-.url-form button:disabled {
+.course-form button:disabled {
   cursor: progress;
   opacity: 0.8;
   transform: none;
 }
 
-.hint {
+.course-form__hint {
   margin: 0;
   color: #9db1d8;
   font-size: 14px;
@@ -131,7 +139,7 @@
   color: #ff9fa6;
 }
 
-.content-grid {
+.layout {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 16px;
@@ -165,14 +173,14 @@
   gap: 10px;
 }
 
-.section-block {
+.sections__block {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   background: rgba(6, 10, 22, 0.75);
   overflow: hidden;
 }
 
-.section-header {
+.sections__header {
   width: 100%;
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -185,31 +193,31 @@
   cursor: pointer;
 }
 
-.section-header:hover {
+.sections__header:hover {
   background: rgba(255, 255, 255, 0.06);
 }
 
-.section-header__text {
+.sections__header-text {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
 }
 
-.arrow {
+.sections__arrow {
   transition: transform 150ms ease;
 }
 
-.arrow--open {
+.sections__arrow--open {
   transform: rotate(90deg);
 }
 
-.lessons-list {
+.sections__lessons {
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
-.lesson-row {
+.sections__lesson {
   display: grid;
   grid-template-columns: 60px 1fr 120px;
   align-items: center;
@@ -217,7 +225,8 @@
   border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.lesson-row .duration {
+.sections__lesson .duration,
+.sections__duration {
   justify-self: center;
   display: inline-flex;
   align-items: center;
@@ -225,7 +234,7 @@
   min-width: 80px;
 }
 
-.lesson-index {
+.sections__lesson-index {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -237,25 +246,26 @@
   font-weight: 700;
 }
 
-.lesson-text {
+.sections__lesson-text {
   display: flex;
   flex-direction: column;
 }
 
-.section {
+.sections__title {
   margin: 0;
   color: #8fa7d6;
   font-size: 13px;
   letter-spacing: 0.01em;
 }
 
-.title {
+.sections__lesson-title,
+.sections__count {
   margin: 2px 0 0;
   font-weight: 700;
   color: #f0f4ff;
 }
 
-.duration {
+.sections__duration {
   background: rgba(255, 255, 255, 0.08);
   border-radius: 999px;
   padding: 6px 10px;
@@ -273,6 +283,7 @@
   background: rgba(74, 115, 255, 0.16);
   color: #c8d9ff;
   font-weight: 700;
+  padding: 10px;
 }
 
 .pill--ghost {
@@ -284,7 +295,7 @@
 }
 
 @media (max-width: 720px) {
-  .app-shell {
+  .app {
     padding: 32px 14px 60px;
   }
 
@@ -292,20 +303,11 @@
     flex-direction: column;
   }
 
-  .url-form__row {
+  .course-form__row {
     flex-direction: column;
   }
 
-  .url-form button {
+  .course-form button {
     width: 100%;
-  }
-
-  .table__row {
-    grid-template-columns: 1fr;
-    align-items: flex-start;
-  }
-
-  .cell--duration {
-    justify-content: flex-start;
   }
 }

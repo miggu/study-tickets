@@ -1,22 +1,13 @@
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
+import {
+  durationToSeconds,
+  formatSeconds,
+  lessonsFromCurriculum,
+  type CourseSchema,
+  type Lesson,
+} from "./utils";
 import "./App.css";
-
-type Lesson = {
-  title: string;
-  duration: string;
-  section?: string;
-};
-
-type CourseSchema = {
-  name?: string;
-  description?: string;
-  sectionCount?: number;
-  syllabusSections?: Array<{
-    name?: string;
-    timeRequired?: string;
-  }>;
-};
 
 type PlanDay = {
   day: number;
@@ -34,120 +25,6 @@ const fetchCurriculumContext = async (url: string) => {
     );
   }
   return response.json();
-};
-
-const formatSeconds = (seconds?: number | null) => {
-  if (seconds === undefined || seconds === null || Number.isNaN(seconds))
-    return undefined;
-  const total = Math.max(0, Math.round(seconds));
-  const h = Math.floor(total / 3600);
-  const m = Math.floor((total % 3600) / 60);
-  const s = total % 60;
-  if (h > 0)
-    return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-  return `${m}:${String(s).padStart(2, "0")}`;
-};
-
-const normalizeDuration = (maybeText?: string, seconds?: number | null) => {
-  if (maybeText && maybeText.trim()) return maybeText.trim();
-  const formatted = formatSeconds(seconds ?? undefined);
-  return formatted || "—";
-};
-
-const durationToSeconds = (duration?: string | null): number | null => {
-  if (!duration) return null;
-  const lower = duration.toLowerCase();
-  if (lower.includes("question")) return 0;
-
-  // mm:ss or hh:mm:ss
-  const colonParts = duration.split(":").map((p) => Number(p));
-  if (
-    colonParts.length >= 2 &&
-    colonParts.length <= 3 &&
-    !colonParts.some((n) => Number.isNaN(n))
-  ) {
-    if (colonParts.length === 3) {
-      return colonParts[0] * 3600 + colonParts[1] * 60 + colonParts[2];
-    }
-    return colonParts[0] * 60 + colonParts[1];
-  }
-
-  const hmsMatch = lower.match(
-    /(?:(\d+)\s*h)?\s*(?:(\d+)\s*m)?\s*(?:(\d+)\s*s)?/
-  );
-  if (hmsMatch) {
-    const h = Number(hmsMatch[1] || 0);
-    const m = Number(hmsMatch[2] || 0);
-    const s = Number(hmsMatch[3] || 0);
-    if (
-      !Number.isNaN(h) &&
-      !Number.isNaN(m) &&
-      !Number.isNaN(s) &&
-      (h || m || s)
-    ) {
-      return h * 3600 + m * 60 + s;
-    }
-  }
-
-  const asNumber = Number(duration);
-  if (!Number.isNaN(asNumber) && asNumber > 0) {
-    // Treat bare numbers as minutes.
-    return asNumber * 60;
-  }
-
-  return null;
-};
-
-const lessonsFromCurriculum = (
-  data: unknown
-): { lessons: Lesson[]; courseSchema: CourseSchema | null } => {
-  const lessons: Lesson[] = [];
-  const context =
-    (data as { curriculum_context?: { data?: unknown } })?.curriculum_context
-      ?.data || (data as { data?: unknown })?.data;
-  const sections = (context as { sections?: unknown[] } | undefined)?.sections;
-  if (!Array.isArray(sections)) return { lessons, courseSchema: null };
-
-  const courseSchema: CourseSchema = {
-    name: (context as { title?: string } | undefined)?.title,
-    syllabusSections: [],
-    sectionCount: sections.length,
-  };
-
-  sections.forEach((section, sectionIndex) => {
-    if (!section || typeof section !== "object") return;
-    const sec = section as Record<string, unknown>;
-    const title =
-      (sec.title as string) ||
-      (sec.name as string) ||
-      `Section ${sectionIndex + 1}`;
-    courseSchema.syllabusSections?.push({
-      name: title,
-      timeRequired: formatSeconds((sec.content_length as number) || undefined),
-    });
-    const items = sec.items as unknown[];
-    if (!Array.isArray(items)) return;
-    items.forEach((item) => {
-      if (!item || typeof item !== "object") return;
-      const obj = item as Record<string, unknown>;
-      const itemTitle = (obj.title as string) || (obj.name as string);
-      if (!itemTitle) return;
-      const duration =
-        (obj.content_summary as string) ||
-        normalizeDuration(
-          undefined,
-          (obj.content_length as number) || undefined
-        ) ||
-        "—";
-      lessons.push({
-        title: itemTitle.trim(),
-        duration,
-        section: title?.trim(),
-      });
-    });
-  });
-
-  return { lessons, courseSchema };
 };
 
 function App() {
@@ -283,12 +160,12 @@ function App() {
   };
 
   return (
-    <div className="app-shell">
+    <div className="app">
       <header className="hero">
         <div className="hero__text">
-          <p className="eyebrow">Course capture</p>
+          <p className="hero__eyebrow">Course capture</p>
           <h1>Turn a course URL into a Trello-ready lesson list.</h1>
-          <p className="lede">
+          <p className="hero__lede">
             Paste a Udemy course and we will parse the curriculum directly from
             the API.
           </p>
@@ -297,9 +174,9 @@ function App() {
       </header>
 
       <section className="panel">
-        <form className="url-form" onSubmit={handleSubmit}>
+        <form className="course-form" onSubmit={handleSubmit}>
           <label htmlFor="courseUrl">Course URL</label>
-          <div className="url-form__row">
+          <div className="course-form__row">
             <input
               id="courseUrl"
               name="courseUrl"
@@ -312,7 +189,7 @@ function App() {
               {loading ? "Reading…" : "Extract lessons"}
             </button>
           </div>
-          <p className="hint">
+          <p className="course-form__hint">
             We fetch the curriculum_context from Udemy and list every lecture
             with its duration.
           </p>
@@ -326,7 +203,7 @@ function App() {
         <section className="panel">
           <div className="board__header">
             <div>
-              <p className="eyebrow">Course</p>
+              <p className="hero__eyebrow">Course</p>
               <h2>{courseInfo.name ?? "Course info"}</h2>
             </div>
             <span className="pill pill--ghost">
@@ -336,16 +213,16 @@ function App() {
             </span>
           </div>
           {courseInfo.description && (
-            <p className="hint">{courseInfo.description}</p>
+            <p className="course-form__hint">{courseInfo.description}</p>
           )}
         </section>
       )}
 
-      <div className="content-grid">
+      <div className="layout">
         <section className="board">
           <div className="board__header">
             <div>
-              <p className="eyebrow">Lesson table</p>
+              <p className="hero__eyebrow">Lesson table</p>
               <h2>Episodes & durations</h2>
             </div>
             <span className="pill pill--ghost">
@@ -357,33 +234,41 @@ function App() {
             {sectionGroups.map((section, idx) => {
               const isOpen = expandedSections.has(section.title);
               return (
-                <div className="section-block" key={section.title + idx}>
+                <div className="sections__block" key={section.title + idx}>
                   <button
                     type="button"
-                    className="section-header"
+                    className="sections__header"
                     onClick={() => toggleSection(section.title)}
                     aria-expanded={isOpen}
                   >
-                    <span className={`arrow ${isOpen ? "arrow--open" : ""}`}>
+                    <span
+                      className={`sections__arrow ${
+                        isOpen ? "sections__arrow--open" : ""
+                      }`}
+                    >
                       ▸
                     </span>
-                    <div className="section-header__text">
-                      <p className="section">{section.title}</p>
-                      <p className="title">{section.lessons.length} items</p>
+                    <div className="sections__header-text">
+                      <p className="sections__title">{section.title}</p>
+                      <p className="sections__count">
+                        {section.lessons.length} items
+                      </p>
                     </div>
-                    <span className="duration">
+                    <span className="sections__duration">
                       {formatSeconds(section.totalSeconds) || "—"}
                     </span>
                   </button>
                   {isOpen && (
-                    <div className="lessons-list">
+                    <div className="sections__lessons">
                       {section.lessons.map(({ title, duration }, index) => (
-                        <div className="lesson-row" key={title + index}>
-                          <div className="lesson-index">{index + 1}</div>
-                          <div className="lesson-text">
-                            <p className="title">{title}</p>
+                        <div className="sections__lesson" key={title + index}>
+                          <div className="sections__lesson-index">
+                            {index + 1}
                           </div>
-                          <span className="duration">{duration}</span>
+                          <div className="sections__lesson-text">
+                            <p className="sections__lesson-title">{title}</p>
+                          </div>
+                          <span className="sections__duration">{duration}</span>
                         </div>
                       ))}
                     </div>
@@ -398,13 +283,13 @@ function App() {
           <section className="panel">
             <div className="board__header">
               <div>
-                <p className="eyebrow">Study plan</p>
+                <p className="hero__eyebrow">Study plan</p>
                 <h2>Split by daily time</h2>
               </div>
             </div>
-            <div className="plan-form">
+            <div className="plan__form">
               <label htmlFor="dailyHours">Daily hours</label>
-              <div className="plan-input-row">
+              <div className="plan__input-row">
                 <input
                   id="dailyHours"
                   type="number"
@@ -419,26 +304,37 @@ function App() {
               </div>
             </div>
             {plan.length > 0 && (
-              <div className="plan-list">
+              <div className="plan__list">
                 {plan.map((day) => (
-                  <div className="plan-day" key={day.day}>
-                    <div className="plan-day__header">
+                  <div className="plan__day" key={day.day}>
+                    <div className="plan__day-header">
                       <span className="pill">Day {day.day}</span>
-                      <span className="duration">
+                      <span className="sections__duration">
                         {formatSeconds(day.totalSeconds) || "—"}
                       </span>
                     </div>
-                    <div className="plan-day__lessons">
+                    <div className="plan__day-lessons">
                       {day.lessons.map((lesson, idx) => (
-                        <div className="lesson-row" key={lesson.title + idx}>
-                          <div className="lesson-index">{idx + 1}</div>
-                          <div className="lesson-text">
-                            {lesson.section && (
-                              <p className="section">{lesson.section}</p>
-                            )}
-                            <p className="title">{lesson.title}</p>
+                        <div
+                          className="sections__lesson"
+                          key={lesson.title + idx}
+                        >
+                          <div className="sections__lesson-index">
+                            {idx + 1}
                           </div>
-                          <span className="duration">{lesson.duration}</span>
+                          <div className="sections__lesson-text">
+                            {lesson.section && (
+                              <p className="sections__title">
+                                {lesson.section}
+                              </p>
+                            )}
+                            <p className="sections__lesson-title">
+                              {lesson.title}
+                            </p>
+                          </div>
+                          <span className="sections__duration">
+                            {lesson.duration}
+                          </span>
                         </div>
                       ))}
                     </div>
