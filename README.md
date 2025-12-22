@@ -1,73 +1,32 @@
-# React + TypeScript + Vite
+# Udemy Curriculum Planner
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Turns a Udemy course URL into a structured lesson list and a daily study plan, then (optionally) pushes to Trello.
 
-Currently, two official plugins are available:
+## What it does
+- Fetches a course’s curriculum via Udemy’s public API (no scraping/AI).
+- Groups lessons by section with durations.
+- Builds a daily plan based on “hours per day” input.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Getting started
+1) Install deps: `npm install`
+2) Run backend + frontend together: `npm run dev:full`
+   - Frontend: http://localhost:5173
+   - Backend proxy: http://localhost:3001
+3) Paste a Udemy course URL and click “Extract lessons.”
+4) Set “Daily hours” and build the study plan.
 
-## React Compiler
+## Environment
+- `.env` (optional): `PORT`/`BACKEND_PORT` to change backend port.
+- No API keys required for Udemy curriculum fetch.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Scripts
+- `npm run dev:full` – start backend + Vite dev server.
+- `npm run dev` – Vite only (requires backend running separately).
+- `npm run server` – backend only.
+- `npm run build` – type-check + production build.
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Notes
+- Backend endpoints:
+  - `GET /api/curriculum?url=<course_url>` → curriculum_context JSON.
+  - `GET /api/health` → simple ok check.
+- Study plan splits lessons sequentially into day buckets based on daily hours.
