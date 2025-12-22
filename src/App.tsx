@@ -201,7 +201,7 @@ function App() {
 
       {courseInfo && (
         <section className="panel">
-          <div className="board__header">
+          <div className="panel__header">
             <div>
               <p className="hero__eyebrow">Course</p>
               <h2>{courseInfo.name ?? "Course info"}</h2>
@@ -224,8 +224,8 @@ function App() {
       )}
 
       <div className="layout">
-        <section className="board">
-          <div className="board__header">
+        <section className="panel panel--table">
+          <div className="panel__header">
             <div>
               <p className="hero__eyebrow">Lesson table</p>
               <h2>Episodes & durations</h2>
@@ -285,8 +285,8 @@ function App() {
         </section>
 
         {hasLessons && (
-          <section className="panel">
-            <div className="board__header">
+          <section className="panel panel--plan">
+            <div className="panel__header">
               <div>
                 <p className="hero__eyebrow">Study plan</p>
                 <h2>Split by daily time</h2>
