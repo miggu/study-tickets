@@ -1,4 +1,5 @@
 export type Lesson = {
+  id: string
   title: string
   duration: string
   section?: string
@@ -91,7 +92,7 @@ export const lessonsFromCurriculum = (
     })
     const items = sec.items as unknown[]
     if (!Array.isArray(items)) return
-    items.forEach((item) => {
+    items.forEach((item, itemIndex) => {
       if (!item || typeof item !== 'object') return
       const obj = item as Record<string, unknown>
       const itemTitle = (obj.title as string) || (obj.name as string)
@@ -101,6 +102,7 @@ export const lessonsFromCurriculum = (
         normalizeDuration(undefined, (obj.content_length as number) || undefined) ||
         '—'
       lessons.push({
+        id: `${sectionIndex}-${itemIndex}-${itemTitle.trim()}`,
         title: itemTitle.trim(),
         duration,
         section: title?.trim(),

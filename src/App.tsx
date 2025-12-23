@@ -97,6 +97,7 @@ function App() {
     setStatus("Fetching curriculum via API…");
     setLoading(true);
     setCourseInfo(null);
+    setPlan([]);
 
     try {
       const curriculum = await fetchCurriculumContext(courseUrl.trim());
@@ -122,6 +123,18 @@ function App() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const removeSection = (title: string) => {
+    setLessons((prev) => prev.filter((lesson) => lesson.section !== title));
+    setPlan([]);
+    setStatus(`Removed section "${title}".`);
+  };
+
+  const removeLesson = (id: string) => {
+    setLessons((prev) => prev.filter((lesson) => lesson.id !== id));
+    setPlan([]);
+    setStatus("Removed a lesson.");
   };
 
   const generatePlan = () => {
@@ -240,42 +253,65 @@ function App() {
               const isOpen = expandedSections.has(section.title);
               return (
                 <div className="sections__block" key={section.title + idx}>
-                  <button
-                    type="button"
-                    className="sections__header"
-                    onClick={() => toggleSection(section.title)}
-                    aria-expanded={isOpen}
-                  >
-                    <span
-                      className={`sections__arrow ${
-                        isOpen ? "sections__arrow--open" : ""
-                      }`}
+                  <div className="sections__header">
+                    <button
+                      type="button"
+                      className="sections__toggle"
+                      onClick={() => toggleSection(section.title)}
+                      aria-expanded={isOpen}
                     >
-                      ▸
-                    </span>
-                    <div className="sections__header-text">
-                      <p className="sections__title">{section.title}</p>
-                      <p className="sections__count">
-                        {section.lessons.length} items
-                      </p>
-                    </div>
-                    <span className="sections__duration">
-                      {formatSeconds(section.totalSeconds) || "—"}
-                    </span>
-                  </button>
+                      <span
+                        className={`sections__arrow ${
+                          isOpen ? "sections__arrow--open" : ""
+                        }`}
+                      >
+                        ▸
+                      </span>
+                      <div className="sections__header-text">
+                        <p className="sections__title">{section.title}</p>
+                        <p className="sections__count">
+                          {section.lessons.length} items
+                        </p>
+                      </div>
+                      <span className="sections__duration">
+                        {formatSeconds(section.totalSeconds) || "—"}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className="sections__action"
+                      onClick={() => removeSection(section.title)}
+                    >
+                      Done
+                    </button>
+                  </div>
                   {isOpen && (
                     <div className="sections__lessons">
-                      {section.lessons.map(({ title, duration }, index) => (
-                        <div className="sections__lesson" key={title + index}>
-                          <div className="sections__lesson-index">
-                            {index + 1}
+                      {section.lessons.map(
+                        ({ title, duration, id }, index) => (
+                          <div
+                            className="sections__lesson sections__lesson--with-action"
+                            key={id}
+                          >
+                            <div className="sections__lesson-index">
+                              {index + 1}
+                            </div>
+                            <div className="sections__lesson-text">
+                              <p className="sections__lesson-title">{title}</p>
+                            </div>
+                            <span className="sections__duration">
+                              {duration}
+                            </span>
+                            <button
+                              type="button"
+                              className="sections__action"
+                              onClick={() => removeLesson(id)}
+                            >
+                              Done
+                            </button>
                           </div>
-                          <div className="sections__lesson-text">
-                            <p className="sections__lesson-title">{title}</p>
-                          </div>
-                          <span className="sections__duration">{duration}</span>
-                        </div>
-                      ))}
+                        )
+                      )}
                     </div>
                   )}
                 </div>
@@ -320,10 +356,7 @@ function App() {
                     </div>
                     <div className="plan__day-lessons">
                       {day.lessons.map((lesson, idx) => (
-                        <div
-                          className="sections__lesson"
-                          key={lesson.title + idx}
-                        >
+                        <div className="sections__lesson" key={lesson.id}>
                           <div className="sections__lesson-index">
                             {idx + 1}
                           </div>
