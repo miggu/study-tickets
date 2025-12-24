@@ -147,3 +147,6 @@ export const normalizeUdemyCourseUrl = (
   const slug = segments[1]
   return { normalizedUrl: `https://www.udemy.com/course/${slug}/` }
 }
+
+export const udemyUrlToStorageKey = (url: string) =>
+  `udemy-organise.course.${encodeURIComponent(url)}`

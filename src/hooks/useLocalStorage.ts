@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 
 export function useLocalStorage() {
-  const readJson = useCallback(<T,>(key: string): T | null => {
+  const readStorage = useCallback(<T,>(key: string): T | null => {
     if (typeof window === "undefined") return null;
     try {
       const stored = window.localStorage.getItem(key);
@@ -11,7 +11,7 @@ export function useLocalStorage() {
     }
   }, []);
 
-  const writeJson = useCallback((key: string, value: unknown) => {
+  const writeStorage = useCallback((key: string, value: unknown) => {
     if (typeof window === "undefined") return;
     try {
       window.localStorage.setItem(key, JSON.stringify(value));
@@ -20,5 +20,5 @@ export function useLocalStorage() {
     }
   }, []);
 
-  return { readJson, writeJson };
+  return [readStorage, writeStorage] as const;
 }

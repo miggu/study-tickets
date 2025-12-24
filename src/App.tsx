@@ -3,6 +3,7 @@ import { useState } from "react";
 import {
   lessonsFromCurriculum,
   normalizeUdemyCourseUrl,
+  udemyUrlToStorageKey,
   type CourseSchema,
   type Lesson,
 } from "./utils";
@@ -15,9 +16,6 @@ type Course = {
   lessons: Lesson[];
   courseInfo: CourseSchema | null;
 };
-const courseStorageKey = (url: string) =>
-  `udemy-organise.course.${encodeURIComponent(url)}`;
-
 const fetchCurriculumContext = async (url: string) => {
   const proxiedUrl = `/api/curriculum?url=${encodeURIComponent(url)}`;
   const response = await fetch(proxiedUrl);
@@ -39,7 +37,7 @@ function App() {
     "Ready. Paste a URL and extract."
   );
   const [courseInfo, setCourseInfo] = useState<CourseSchema | null>(null);
-  const { readJson, writeJson } = useLocalStorage();
+  const [readStorage, writeStorage] = useLocalStorage();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -57,8 +55,8 @@ function App() {
     setCourseInfo(null);
 
     try {
-      const storageKey = courseStorageKey(normalizedUrl);
-      const cached = readJson<Course>(storageKey);
+      const storageKey = udemyUrlToStorageKey(normalizedUrl);
+      const cached = readStorage<Course>(storageKey);
       if (cached && Array.isArray(cached.lessons) && cached.lessons.length) {
         setLessons(cached.lessons);
         setCourseInfo(cached.courseInfo ?? null);
@@ -75,7 +73,7 @@ function App() {
 
       setLessons(curriculumLessons);
       setCourseInfo(curriculumInfo);
-      writeJson(storageKey, {
+      writeStorage(storageKey, {
         lessons: curriculumLessons,
         courseInfo: curriculumInfo,
       });
