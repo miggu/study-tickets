@@ -1,10 +1,9 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
 import {
-  lessonsFromCurriculum,
   normalizeUdemyCourseUrl,
   udemyUrlToStorageKey,
-  type CourseSchema,
+  type Course,
   type Lesson,
 } from "./utils";
 import { LessonTable } from "./components/LessonTable";
@@ -12,11 +11,7 @@ import { StudyPlan } from "./components/StudyPlan";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import "./App.css";
 
-type Course = {
-  lessons: Lesson[];
-  courseInfo: CourseSchema | null;
-};
-const fetchCurriculumContext = async (url: string) => {
+const fetchCourse = async (url: string) => {
   const proxiedUrl = `/api/curriculum?url=${encodeURIComponent(url)}`;
   const response = await fetch(proxiedUrl);
   if (!response.ok) {
@@ -25,7 +20,10 @@ const fetchCurriculumContext = async (url: string) => {
       `Fetching curriculum failed (${response.status}). ${text || ""}`.trim()
     );
   }
-  return response.json();
+  return response.json() as Promise<{
+    lessons: Lesson[];
+    course: Course | null;
+  }>;
 };
 
 function App() {
@@ -36,7 +34,7 @@ function App() {
   const [status, setStatus] = useState<string>(
     "Ready. Paste a URL and extract."
   );
-  const [courseInfo, setCourseInfo] = useState<CourseSchema | null>(null);
+  const [course, setCourse] = useState<Course | null>(null);
   const [readStorage, writeStorage] = useLocalStorage();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -50,38 +48,40 @@ function App() {
     }
 
     setError(null);
-    setStatus("Fetching curriculum via API…");
+    setStatus("Fetching course via API…");
     setLoading(true);
-    setCourseInfo(null);
+    setCourse(null);
 
     try {
       const storageKey = udemyUrlToStorageKey(normalizedUrl);
-      const cachedCourse = readStorage<Course>(storageKey);
+      const cachedCourse = readStorage<{
+        lessons: Lesson[];
+        course: Course | null;
+      }>(storageKey);
       if (
         cachedCourse &&
         Array.isArray(cachedCourse.lessons) &&
         cachedCourse.lessons.length
       ) {
         setLessons(cachedCourse.lessons);
-        setCourseInfo(cachedCourse.courseInfo ?? null);
+        setCourse(cachedCourse.course ?? null);
         setStatus(`Loaded ${cachedCourse.lessons.length} lessons from cache.`);
         return;
       }
 
-      const curriculum = await fetchCurriculumContext(normalizedUrl);
-      const { lessons: curriculumLessons, courseSchema: curriculumInfo } =
-        lessonsFromCurriculum(curriculum);
-      if (!curriculumLessons.length) {
-        throw new Error("Curriculum API did not return any sections/items");
+      const { lessons: courseLessons, course } =
+        await fetchCourse(normalizedUrl);
+      if (!courseLessons.length) {
+        throw new Error("Course API did not return any sections/items");
       }
 
-      setLessons(curriculumLessons);
-      setCourseInfo(curriculumInfo);
+      setLessons(courseLessons);
+      setCourse(course);
       writeStorage(storageKey, {
-        lessons: curriculumLessons,
-        courseInfo: curriculumInfo,
+        lessons: courseLessons,
+        course,
       });
-      setStatus(`Done. Parsed ${curriculumLessons.length} lessons from API.`);
+      setStatus(`Done. Parsed ${courseLessons.length} lessons from API.`);
     } catch (err) {
       console.error(err);
       const message =
@@ -146,25 +146,25 @@ function App() {
         </p>
       </section>
 
-      {courseInfo && (
+      {course && (
         <section className="panel">
           <div className="panel__header">
             <div>
               <p className="hero__eyebrow">Course</p>
-              <h2>{courseInfo.name ?? "Course info"}</h2>
+              <h2>{course.name ?? "Course info"}</h2>
             </div>
             <span className="pill pill--ghost">
-              {courseInfo.syllabusSections?.length
-                ? `${courseInfo.syllabusSections.length} sections`
+              {course.syllabusSections?.length
+                ? `${course.syllabusSections.length} sections`
                 : "schema.org"}
             </span>
           </div>
-          {courseInfo.description && (
-            <p className="course-form__hint">{courseInfo.description}</p>
+          {course.description && (
+            <p className="course-form__hint">{course.description}</p>
           )}
-          {courseInfo.courseTitle && (
+          {course.courseTitle && (
             <p className="course-form__hint">
-              Fetched course title: <strong>{courseInfo.courseTitle}</strong>
+              Fetched course title: <strong>{course.courseTitle}</strong>
             </p>
           )}
         </section>

@@ -2,6 +2,89 @@ import express, { type Request, type Response } from 'express'
 const PORT = Number(process.env.PORT || process.env.BACKEND_PORT || 3001)
 const app = express()
 
+type Lesson = {
+  id: string
+  title: string
+  duration: string
+  section?: string
+}
+
+type Course = {
+  name?: string
+  courseTitle?: string
+  description?: string
+  sectionCount?: number
+  syllabusSections?: Array<{
+    name?: string
+    timeRequired?: string
+  }>
+}
+
+const formatSeconds = (seconds?: number | null) => {
+  if (seconds === undefined || seconds === null || Number.isNaN(seconds)) return undefined
+  const total = Math.max(0, Math.round(seconds))
+  const h = Math.floor(total / 3600)
+  const m = Math.floor((total % 3600) / 60)
+  const s = total % 60
+  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  return `${m}:${String(s).padStart(2, '0')}`
+}
+
+const normalizeDuration = (maybeText?: string, seconds?: number | null) => {
+  if (maybeText && maybeText.trim()) return maybeText.trim()
+  const formatted = formatSeconds(seconds ?? undefined)
+  return formatted || '—'
+}
+
+const lessonsFromCurriculum = (
+  data: unknown,
+  courseTitle?: string,
+): { lessons: Lesson[]; course: Course | null } => {
+  const lessons: Lesson[] = []
+  const context =
+    (data as { curriculum_context?: { data?: unknown } })?.curriculum_context?.data ||
+    (data as { data?: unknown })?.data
+  const sections = (context as { sections?: unknown[] } | undefined)?.sections
+  if (!Array.isArray(sections)) return { lessons, course: null }
+
+  const course: Course = {
+    name: (context as { title?: string } | undefined)?.title || courseTitle,
+    courseTitle: courseTitle || (context as { title?: string } | undefined)?.title,
+    syllabusSections: [],
+    sectionCount: sections.length,
+  }
+
+  sections.forEach((section, sectionIndex) => {
+    if (!section || typeof section !== 'object') return
+    const sec = section as Record<string, unknown>
+    const title = (sec.title as string) || (sec.name as string) || `Section ${sectionIndex + 1}`
+    course.syllabusSections?.push({
+      name: title,
+      timeRequired: formatSeconds((sec.content_length as number) || undefined),
+    })
+    const items = sec.items as unknown[]
+    if (!Array.isArray(items)) return
+    items.forEach((item, itemIndex) => {
+      if (!item || typeof item !== 'object') return
+      const obj = item as Record<string, unknown>
+      const itemTitle = (obj.title as string) || (obj.name as string)
+      if (!itemTitle) return
+      const duration =
+        (obj.content_summary as string) ||
+        normalizeDuration(undefined, (obj.content_length as number) || undefined) ||
+        '—'
+      lessons.push({
+        id: `${sectionIndex}-${itemIndex}-${itemTitle.trim()}`,
+        title: itemTitle.trim(),
+        duration,
+        section: title?.trim(),
+      })
+    })
+  })
+
+  return { lessons, course }
+}
+
 app.get('/api/health', (_req: Request, res: Response) => {
   res.json({ ok: true })
 })
@@ -58,10 +141,8 @@ app.get('/api/curriculum', async (req: Request, res: Response) => {
     }
 
     const curriculum = await curriculumResp.json()
-    if (courseMeta.title) {
-      ;(curriculum as Record<string, unknown>).courseTitle = courseMeta.title
-    }
-    res.json(curriculum)
+    const { lessons, course } = lessonsFromCurriculum(curriculum, courseMeta.title)
+    res.json({ lessons, course })
   } catch (error) {
     console.error('Curriculum fetch failed', target, error)
     res.status(500).send('Failed to fetch curriculum data')
