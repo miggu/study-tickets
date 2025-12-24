@@ -35,6 +35,19 @@ function App() {
   const [courseInfo, setCourseInfo] = useState<CourseInfo | null>(null);
   const [readStorage, writeStorage] = useLocalStorage();
 
+  const loadCourse = (
+    { lessons, courseInfo }: Course,
+    source: "cache" | "api"
+  ) => {
+    setLessons(lessons);
+    setCourseInfo(courseInfo ?? null);
+    setStatus(
+      source === "cache"
+        ? `Loaded ${lessons.length} lessons from cache.`
+        : `Done. Parsed ${lessons.length} lessons from API.`
+    );
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const { normalizedUrl, error: urlError } =
@@ -58,26 +71,20 @@ function App() {
         Array.isArray(cachedCourse.lessons) &&
         cachedCourse.lessons.length
       ) {
-        setLessons(cachedCourse.lessons);
-        setCourseInfo(cachedCourse.courseInfo ?? null);
-        setStatus(`Loaded ${cachedCourse.lessons.length} lessons from cache.`);
+        loadCourse(cachedCourse, "cache");
         return;
       }
 
-      const { lessons: courseLessons, courseInfo } = await fetchCourse(
-        normalizedUrl
-      );
-      if (!courseLessons.length) {
+      const { lessons, courseInfo } = await fetchCourse(normalizedUrl);
+      if (!lessons.length) {
         throw new Error("Course API did not return any sections/items");
       }
 
-      setLessons(courseLessons);
-      setCourseInfo(courseInfo);
+      loadCourse({ lessons, courseInfo }, "api");
       writeStorage(storageKey, {
-        lessons: courseLessons,
+        lessons,
         courseInfo,
       });
-      setStatus(`Done. Parsed ${courseLessons.length} lessons from API.`);
     } catch (err) {
       console.error(err);
       const message =
