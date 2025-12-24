@@ -56,11 +56,15 @@ function App() {
 
     try {
       const storageKey = udemyUrlToStorageKey(normalizedUrl);
-      const cached = readStorage<Course>(storageKey);
-      if (cached && Array.isArray(cached.lessons) && cached.lessons.length) {
-        setLessons(cached.lessons);
-        setCourseInfo(cached.courseInfo ?? null);
-        setStatus(`Loaded ${cached.lessons.length} lessons from cache.`);
+      const cachedCourse = readStorage<Course>(storageKey);
+      if (
+        cachedCourse &&
+        Array.isArray(cachedCourse.lessons) &&
+        cachedCourse.lessons.length
+      ) {
+        setLessons(cachedCourse.lessons);
+        setCourseInfo(cachedCourse.courseInfo ?? null);
+        setStatus(`Loaded ${cachedCourse.lessons.length} lessons from cache.`);
         return;
       }
 
