@@ -43,8 +43,9 @@ function App() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const { normalized, error: urlError } = normalizeUdemyCourseUrl(courseUrl);
-    if (!normalized) {
+    const { normalizedUrl, error: urlError } =
+      normalizeUdemyCourseUrl(courseUrl);
+    if (!normalizedUrl) {
       setError(urlError ?? "Enter a valid Udemy course URL.");
       setStatus("Waiting for a valid course URL.");
       return;
@@ -56,7 +57,7 @@ function App() {
     setCourseInfo(null);
 
     try {
-      const storageKey = courseStorageKey(normalized);
+      const storageKey = courseStorageKey(normalizedUrl);
       const cached = readJson<Course>(storageKey);
       if (cached && Array.isArray(cached.lessons) && cached.lessons.length) {
         setLessons(cached.lessons);
@@ -65,7 +66,7 @@ function App() {
         return;
       }
 
-      const curriculum = await fetchCurriculumContext(normalized);
+      const curriculum = await fetchCurriculumContext(normalizedUrl);
       const { lessons: curriculumLessons, courseSchema: curriculumInfo } =
         lessonsFromCurriculum(curriculum);
       if (!curriculumLessons.length) {

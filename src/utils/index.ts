@@ -121,29 +121,29 @@ export const lessonsFromCurriculum = (
 
 export const normalizeUdemyCourseUrl = (
   input: string,
-): { normalized: string | null; error?: string } => {
+): { normalizedUrl: string | null; error?: string } => {
   const trimmed = input.trim()
   if (!trimmed) {
-    return { normalized: null, error: 'Enter a Udemy course URL.' }
+    return { normalizedUrl: null, error: 'Enter a Udemy course URL.' }
   }
 
   let parsed: URL
   try {
     parsed = new URL(trimmed)
   } catch {
-    return { normalized: null, error: 'Enter a valid URL.' }
+    return { normalizedUrl: null, error: 'Enter a valid URL.' }
   }
 
   const host = parsed.hostname.toLowerCase()
   if (host !== 'www.udemy.com' && host !== 'udemy.com') {
-    return { normalized: null, error: 'URL must be from udemy.com.' }
+    return { normalizedUrl: null, error: 'URL must be from udemy.com.' }
   }
 
   const segments = parsed.pathname.split('/').filter(Boolean)
   if (segments.length < 2 || segments[0] !== 'course' || !segments[1]) {
-    return { normalized: null, error: 'URL must look like /course/your-slug.' }
+    return { normalizedUrl: null, error: 'URL must look like /course/your-slug.' }
   }
 
   const slug = segments[1]
-  return { normalized: `https://www.udemy.com/course/${slug}/` }
+  return { normalizedUrl: `https://www.udemy.com/course/${slug}/` }
 }
