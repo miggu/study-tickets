@@ -14,8 +14,6 @@ export function StudyPlan({ lessons, loading, onPlanMessage }: Props) {
   const { plan, setPlan, buildPlan } = usePlanBuilder();
   const hasLessons = lessons.length > 0;
 
-  console.log(lessons);
-
   useEffect(() => {
     setPlan([]);
   }, [lessons, setPlan]);
