@@ -11,7 +11,7 @@ export type PlanDay = {
   lessons: Lesson[]
 }
 
-export type Course = {
+export type CourseInfo = {
   name?: string
   courseTitle?: string
   description?: string
@@ -20,6 +20,11 @@ export type Course = {
     name?: string
     timeRequired?: string
   }>
+}
+
+export type Course = {
+  lessons: Lesson[]
+  courseInfo: CourseInfo | null
 }
 
 export const formatSeconds = (seconds?: number | null) => {

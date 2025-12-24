@@ -9,7 +9,7 @@ type Lesson = {
   section?: string
 }
 
-type Course = {
+type CourseInfo = {
   name?: string
   courseTitle?: string
   description?: string
@@ -39,15 +39,15 @@ const normalizeDuration = (maybeText?: string, seconds?: number | null) => {
 const lessonsFromCurriculum = (
   data: unknown,
   courseTitle?: string,
-): { lessons: Lesson[]; course: Course | null } => {
+): { lessons: Lesson[]; courseInfo: CourseInfo | null } => {
   const lessons: Lesson[] = []
   const context =
     (data as { curriculum_context?: { data?: unknown } })?.curriculum_context?.data ||
     (data as { data?: unknown })?.data
   const sections = (context as { sections?: unknown[] } | undefined)?.sections
-  if (!Array.isArray(sections)) return { lessons, course: null }
+  if (!Array.isArray(sections)) return { lessons, courseInfo: null }
 
-  const course: Course = {
+  const courseInfo: CourseInfo = {
     name: (context as { title?: string } | undefined)?.title || courseTitle,
     courseTitle: courseTitle || (context as { title?: string } | undefined)?.title,
     syllabusSections: [],
@@ -58,7 +58,7 @@ const lessonsFromCurriculum = (
     if (!section || typeof section !== 'object') return
     const sec = section as Record<string, unknown>
     const title = (sec.title as string) || (sec.name as string) || `Section ${sectionIndex + 1}`
-    course.syllabusSections?.push({
+    courseInfo.syllabusSections?.push({
       name: title,
       timeRequired: formatSeconds((sec.content_length as number) || undefined),
     })
@@ -82,7 +82,7 @@ const lessonsFromCurriculum = (
     })
   })
 
-  return { lessons, course }
+  return { lessons, courseInfo }
 }
 
 app.get('/api/health', (_req: Request, res: Response) => {
@@ -141,8 +141,8 @@ app.get('/api/curriculum', async (req: Request, res: Response) => {
     }
 
     const curriculum = await curriculumResp.json()
-    const { lessons, course } = lessonsFromCurriculum(curriculum, courseMeta.title)
-    res.json({ lessons, course })
+    const { lessons, courseInfo } = lessonsFromCurriculum(curriculum, courseMeta.title)
+    res.json({ lessons, courseInfo })
   } catch (error) {
     console.error('Curriculum fetch failed', target, error)
     res.status(500).send('Failed to fetch curriculum data')
