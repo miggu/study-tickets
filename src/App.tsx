@@ -1,6 +1,11 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
-import { lessonsFromCurriculum, type CourseSchema, type Lesson } from "./utils";
+import {
+  lessonsFromCurriculum,
+  normalizeUdemyCourseUrl,
+  type CourseSchema,
+  type Lesson,
+} from "./utils";
 import { LessonTable } from "./components/LessonTable";
 import { StudyPlan } from "./components/StudyPlan";
 import { useLocalStorage } from "./hooks/useLocalStorage";
@@ -38,9 +43,10 @@ function App() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const trimmedUrl = courseUrl.trim();
-    if (!trimmedUrl) {
-      setError("Enter a course URL to extract lessons.");
+    const { normalized, error: urlError } = normalizeUdemyCourseUrl(courseUrl);
+    if (!normalized) {
+      setError(urlError ?? "Enter a valid Udemy course URL.");
+      setStatus("Waiting for a valid course URL.");
       return;
     }
 
@@ -50,7 +56,7 @@ function App() {
     setCourseInfo(null);
 
     try {
-      const storageKey = courseStorageKey(trimmedUrl);
+      const storageKey = courseStorageKey(normalized);
       const cached = readJson<Course>(storageKey);
       if (cached && Array.isArray(cached.lessons) && cached.lessons.length) {
         setLessons(cached.lessons);
@@ -59,7 +65,7 @@ function App() {
         return;
       }
 
-      const curriculum = await fetchCurriculumContext(trimmedUrl);
+      const curriculum = await fetchCurriculumContext(normalized);
       const { lessons: curriculumLessons, courseSchema: curriculumInfo } =
         lessonsFromCurriculum(curriculum);
       if (!curriculumLessons.length) {
