@@ -5,6 +5,12 @@ export type Lesson = {
   section?: string
 }
 
+export type PlanDay = {
+  day: number
+  totalSeconds: number
+  lessons: Lesson[]
+}
+
 export type CourseSchema = {
   name?: string
   courseTitle?: string
