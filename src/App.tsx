@@ -3,7 +3,15 @@ import { useState } from "react";
 import { lessonsFromCurriculum, type CourseSchema, type Lesson } from "./utils";
 import { LessonTable } from "./components/LessonTable";
 import { StudyPlan } from "./components/StudyPlan";
+import { useLocalStorage } from "./hooks/useLocalStorage";
 import "./App.css";
+
+type Course = {
+  lessons: Lesson[];
+  courseInfo: CourseSchema | null;
+};
+const courseStorageKey = (url: string) =>
+  `udemy-organise.course.${encodeURIComponent(url)}`;
 
 const fetchCurriculumContext = async (url: string) => {
   const proxiedUrl = `/api/curriculum?url=${encodeURIComponent(url)}`;
@@ -26,10 +34,12 @@ function App() {
     "Ready. Paste a URL and extract."
   );
   const [courseInfo, setCourseInfo] = useState<CourseSchema | null>(null);
+  const { readJson, writeJson } = useLocalStorage();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!courseUrl.trim()) {
+    const trimmedUrl = courseUrl.trim();
+    if (!trimmedUrl) {
       setError("Enter a course URL to extract lessons.");
       return;
     }
@@ -40,7 +50,16 @@ function App() {
     setCourseInfo(null);
 
     try {
-      const curriculum = await fetchCurriculumContext(courseUrl.trim());
+      const storageKey = courseStorageKey(trimmedUrl);
+      const cached = readJson<Course>(storageKey);
+      if (cached && Array.isArray(cached.lessons) && cached.lessons.length) {
+        setLessons(cached.lessons);
+        setCourseInfo(cached.courseInfo ?? null);
+        setStatus(`Loaded ${cached.lessons.length} lessons from cache.`);
+        return;
+      }
+
+      const curriculum = await fetchCurriculumContext(trimmedUrl);
       const { lessons: curriculumLessons, courseSchema: curriculumInfo } =
         lessonsFromCurriculum(curriculum);
       if (!curriculumLessons.length) {
@@ -49,6 +68,10 @@ function App() {
 
       setLessons(curriculumLessons);
       setCourseInfo(curriculumInfo);
+      writeJson(storageKey, {
+        lessons: curriculumLessons,
+        courseInfo: curriculumInfo,
+      });
       setStatus(`Done. Parsed ${curriculumLessons.length} lessons from API.`);
     } catch (err) {
       console.error(err);
