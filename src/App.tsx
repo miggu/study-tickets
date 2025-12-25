@@ -10,6 +10,7 @@ import {
 import { LessonTable } from "./components/LessonTable";
 import { StudyPlan } from "./components/StudyPlan";
 import { HeroHeader } from "./components/HeroHeader";
+import { CourseInput } from "./components/CourseInput";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import "./App.css";
 
@@ -119,29 +120,14 @@ function App() {
       />
 
       <section className="panel">
-        <form className="course-form" onSubmit={handleSubmit}>
-          <label htmlFor="courseUrl">Course URL</label>
-          <div className="course-form__row">
-            <input
-              id="courseUrl"
-              name="courseUrl"
-              value={courseUrl}
-              onChange={(event) => setCourseUrl(event.target.value)}
-              placeholder="https://www.udemy.com/course/your-course"
-              aria-label="Course URL"
-            />
-            <button type="submit" disabled={loading}>
-              {loading ? "Reading…" : "Extract lessons"}
-            </button>
-          </div>
-          <p className="course-form__hint">
-            We fetch the curriculum_context from Udemy and list every lecture
-            with its duration.
-          </p>
-        </form>
-        <p className={`status ${error ? "status--error" : ""}`}>
-          {error ?? status}
-        </p>
+        <CourseInput
+          courseUrl={courseUrl}
+          loading={loading}
+          status={status}
+          error={error}
+          onCourseUrlChange={setCourseUrl}
+          onSubmit={handleSubmit}
+        />
       </section>
 
       {courseInfo && (
