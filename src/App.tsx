@@ -11,6 +11,7 @@ import { LessonTable } from "./components/LessonTable";
 import { StudyPlan } from "./components/StudyPlan";
 import { HeroHeader } from "./components/HeroHeader";
 import { CourseInput } from "./components/CourseInput";
+import { CourseInfoPanel } from "./components/CourseInfo";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import "./App.css";
 
@@ -130,29 +131,7 @@ function App() {
         />
       </section>
 
-      {courseInfo && (
-        <section className="panel">
-          <div className="panel__header">
-            <div>
-              <p className="hero__eyebrow">Course</p>
-              <h2>{courseInfo.name ?? "Course info"}</h2>
-            </div>
-            <span className="pill pill--ghost">
-              {courseInfo.syllabusSections?.length
-                ? `${courseInfo.syllabusSections.length} sections`
-                : "schema.org"}
-            </span>
-          </div>
-          {courseInfo.description && (
-            <p className="course-form__hint">{courseInfo.description}</p>
-          )}
-          {courseInfo.courseTitle && (
-            <p className="course-form__hint">
-              Fetched course title: <strong>{courseInfo.courseTitle}</strong>
-            </p>
-          )}
-        </section>
-      )}
+      {courseInfo && <CourseInfoPanel courseInfo={courseInfo} />}
 
       <div className="layout">
         <LessonTable
