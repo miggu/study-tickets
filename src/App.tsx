@@ -9,6 +9,7 @@ import {
 } from "./utils";
 import { LessonTable } from "./components/LessonTable";
 import { StudyPlan } from "./components/StudyPlan";
+import { HeroHeader } from "./components/HeroHeader";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import "./App.css";
 
@@ -111,17 +112,11 @@ function App() {
 
   return (
     <div className="app">
-      <header className="hero">
-        <div className="hero__text">
-          <p className="hero__eyebrow">Course capture</p>
-          <h1>Turn a course URL into a Trello-ready lesson list.</h1>
-          <p className="hero__lede">
-            Paste a Udemy course and we will parse the curriculum directly from
-            the API.
-          </p>
-        </div>
-        <div className="hero__badge">alpha</div>
-      </header>
+      <HeroHeader
+        title="Turn a course URL into a Trello-ready lesson list."
+        description="Paste a Udemy course and we will parse the curriculum directly from the API."
+        badge="alpha"
+      />
 
       <section className="panel">
         <form className="course-form" onSubmit={handleSubmit}>
