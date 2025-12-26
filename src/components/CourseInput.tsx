@@ -1,32 +1,36 @@
-import type { FormEventHandler } from "react";
+import { useState } from "react";
 
 type CourseInputProps = {
-  courseUrl: string;
   loading: boolean;
   status: string;
   error: string | null;
-  onCourseUrlChange: (value: string) => void;
-  onSubmit: FormEventHandler<HTMLFormElement>;
+  handleSubmit: (courseUrl: string) => void;
 };
 
 export function CourseInput({
-  courseUrl,
   loading,
   status,
   error,
-  onCourseUrlChange,
-  onSubmit,
+  handleSubmit,
 }: CourseInputProps) {
+  const [courseUrl, setCourseUrl] = useState("");
+
   return (
     <>
-      <form className="course-form" onSubmit={onSubmit}>
+      <form
+        className="course-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          handleSubmit(courseUrl);
+        }}
+      >
         <label htmlFor="courseUrl">Course URL</label>
         <div className="course-form__row">
           <input
             id="courseUrl"
             name="courseUrl"
             value={courseUrl}
-            onChange={(event) => onCourseUrlChange(event.target.value)}
+            onChange={(event) => setCourseUrl(event.target.value)}
             placeholder="https://www.udemy.com/course/your-course"
             aria-label="Course URL"
           />

@@ -1,4 +1,3 @@
-import type { FormEvent } from "react";
 import { useState } from "react";
 import {
   normalizeUdemyCourseUrl,
@@ -28,7 +27,6 @@ const fetchCourse = async (url: string) => {
 };
 
 function App() {
-  const [courseUrl, setCourseUrl] = useState("");
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,8 +49,7 @@ function App() {
     );
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSubmit = async (courseUrl: string) => {
     const { normalizedUrl, error: urlError } =
       normalizeUdemyCourseUrl(courseUrl);
     if (!normalizedUrl) {
@@ -122,12 +119,10 @@ function App() {
 
       <section className="panel">
         <CourseInput
-          courseUrl={courseUrl}
           loading={loading}
           status={status}
           error={error}
-          onCourseUrlChange={setCourseUrl}
-          onSubmit={handleSubmit}
+          handleSubmit={handleSubmit}
         />
       </section>
 
