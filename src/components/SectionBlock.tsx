@@ -1,4 +1,5 @@
 import { formatSeconds, type Lesson } from "../utils";
+import { LessonItem } from "./LessonItem";
 
 export type SectionGroup = {
   title: string;
@@ -39,9 +40,7 @@ export function SectionBlock({
           </span>
           <div className="sections__header-text">
             <p className="sections__title">{section.title}</p>
-            <p className="sections__count">
-              {section.lessons.length} items
-            </p>
+            <p className="sections__count">{section.lessons.length} items</p>
           </div>
           <span className="sections__duration">
             {formatSeconds(section.totalSeconds) || "—"}
@@ -57,24 +56,13 @@ export function SectionBlock({
       </div>
       {isOpen && (
         <div className="sections__lessons">
-          {section.lessons.map(({ title, duration, id }, index) => (
-            <div
-              className="sections__lesson sections__lesson--with-action"
-              key={id}
-            >
-              <div className="sections__lesson-index">{index + 1}</div>
-              <div className="sections__lesson-text">
-                <p className="sections__lesson-title">{title}</p>
-              </div>
-              <span className="sections__duration">{duration}</span>
-              <button
-                type="button"
-                className="sections__action"
-                onClick={() => onRemoveLesson(id)}
-              >
-                Done
-              </button>
-            </div>
+          {section.lessons.map((lesson, index) => (
+            <LessonItem
+              key={lesson.id}
+              lesson={lesson}
+              index={index}
+              onRemoveLesson={onRemoveLesson}
+            />
           ))}
         </div>
       )}
