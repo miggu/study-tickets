@@ -12,7 +12,6 @@ export type PlanDay = {
 }
 
 export type CourseInfo = {
-  name?: string
   courseTitle?: string
   description?: string
   sectionCount?: number

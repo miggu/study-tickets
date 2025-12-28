@@ -126,7 +126,7 @@ function App() {
         />
       </section>
 
-      {courseInfo && <CourseInfoPanel courseInfo={courseInfo} />}
+      {courseInfo && <CourseInfoPanel {...courseInfo} />}
 
       <div className="layout">
         <LessonTable

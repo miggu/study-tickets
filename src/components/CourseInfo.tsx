@@ -1,11 +1,11 @@
 import type { CourseInfo as CourseInfoType } from "../utils";
 
-type CourseInfoProps = {
-  courseInfo: CourseInfoType;
-};
+type CourseInfoProps = CourseInfoType;
 
 export function CourseInfoPanel({
-  courseInfo: { name, description, courseTitle, syllabusSections = [] },
+  description,
+  courseTitle,
+  syllabusSections = [],
 }: CourseInfoProps) {
   const sectionLength = syllabusSections.length;
   return (
@@ -13,18 +13,14 @@ export function CourseInfoPanel({
       <div className="panel__header">
         <div>
           <p className="hero__eyebrow">Course</p>
-          <h2>{name ?? "Course info"}</h2>
+          <h2>Course info</h2>
         </div>
-        <span className="pill pill--ghost">
-          {sectionLength ? `${sectionLength} sections` : "schema.org"}
-        </span>
+        <span className="pill pill--ghost">{`${sectionLength} sections`}</span>
       </div>
-      {description && <p className="course-form__hint">{description}</p>}
-      {courseTitle && (
-        <p className="course-form__hint">
-          Fetched course title: <strong>{courseTitle}</strong>
-        </p>
-      )}
+      <p className="course-form__hint">{description}</p>
+      <p className="course-form__hint">
+        Fetched course title: <strong>{courseTitle}</strong>
+      </p>
     </section>
   );
 }
