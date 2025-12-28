@@ -1,15 +1,6 @@
 import express, { type Request, type Response } from "express";
-import { writeFile } from "fs/promises";
 const PORT = Number(process.env.PORT || process.env.BACKEND_PORT || 3001);
 const app = express();
-
-const dumpJson = async (label: string, data: unknown) => {
-  const safeLabel = label.replace(/[^a-z0-9-_]/gi, "_").toLowerCase();
-  await writeFile(
-    `./dev-untracked/${safeLabel}.json`,
-    JSON.stringify(data, null, 2)
-  );
-};
 
 type Lesson = {
   id: string;
@@ -192,7 +183,6 @@ app.get("/api/curriculum", async (req: Request, res: Response) => {
     }
 
     const curriculum = (await curriculumResp.json()) as CurriculumResponse;
-    await dumpJson("curriculum", curriculum);
     const { lessons, courseInfo } = lessonsFromCurriculum(
       curriculum,
       courseMeta.title
