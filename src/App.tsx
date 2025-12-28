@@ -14,7 +14,7 @@ import { CourseInfoPanel } from "./components/CourseInfo";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import "./App.css";
 
-const fetchCourse = async (url: string) => {
+const fetchCourse = async (url: string): Promise<Course> => {
   const proxiedUrl = `/api/curriculum?url=${encodeURIComponent(url)}`;
   const response = await fetch(proxiedUrl);
   if (!response.ok) {
@@ -23,7 +23,7 @@ const fetchCourse = async (url: string) => {
       `Fetching curriculum failed (${response.status}). ${text || ""}`.trim()
     );
   }
-  return response.json() as Promise<Course>;
+  return response.json();
 };
 
 function App() {
