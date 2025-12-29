@@ -12,7 +12,7 @@ describe("HeroHeader", () => {
   it("renders title, description, and badge", () => {
     render(<HeroHeader {...props} />);
     expect(
-      screen.getByRole("heading", { name: /your title/i })
+      screen.getByRole("heading", { name: /your title/i }),
     ).toBeInTheDocument();
     expect(screen.getByText(/your description/i)).toBeInTheDocument();
     expect(screen.getByText(/alpha/i)).toBeInTheDocument();

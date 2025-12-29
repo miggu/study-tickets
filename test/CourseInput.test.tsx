@@ -17,7 +17,7 @@ describe("CourseInput", () => {
   it("renders input field", () => {
     render(<CourseInput {...props} />);
     expect(
-      screen.getByRole("button", { name: /extract lessons/i })
+      screen.getByRole("button", { name: /extract lessons/i }),
     ).toBeInTheDocument();
   });
   it("works when user types and then clicks", async () => {

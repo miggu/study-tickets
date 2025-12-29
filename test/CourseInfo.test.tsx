@@ -27,7 +27,7 @@ describe("CourseInfoPanel", () => {
     expect(
       screen.getByRole("heading", {
         name: /typescript: the complete developer's guide/i,
-      })
+      }),
     ).toBeInTheDocument();
     expect(screen.getByText(/3 sections/i)).toBeInTheDocument();
     expect(screen.getByText(/fetched course title/i)).toBeInTheDocument();

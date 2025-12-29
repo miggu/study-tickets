@@ -36,7 +36,7 @@ export function usePlanBuilder() {
       setPlan(days);
       return days;
     },
-    []
+    [],
   );
 
   return { plan, setPlan, buildPlan };

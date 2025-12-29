@@ -20,7 +20,7 @@ const fetchCourse = async (url: string): Promise<Course> => {
   if (!response.ok) {
     const text = await response.text().catch(() => "");
     throw new Error(
-      `Fetching curriculum failed (${response.status}). ${text || ""}`.trim()
+      `Fetching curriculum failed (${response.status}). ${text || ""}`.trim(),
     );
   }
   return response.json();
@@ -31,21 +31,21 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string>(
-    "Ready. Paste a URL and extract."
+    "Ready. Paste a URL and extract.",
   );
   const [courseInfo, setCourseInfo] = useState<CourseInfo | null>(null);
   const [readStorage, writeStorage] = useLocalStorage();
 
   const loadCourse = (
     { lessons, courseInfo }: Course,
-    source: "cache" | "api"
+    source: "cache" | "api",
   ) => {
     setLessons(lessons);
     setCourseInfo(courseInfo ?? null);
     setStatus(
       source === "cache"
         ? `Loaded ${lessons.length} lessons from cache.`
-        : `Done. Parsed ${lessons.length} lessons from API.`
+        : `Done. Parsed ${lessons.length} lessons from API.`,
     );
   };
 
@@ -67,7 +67,8 @@ function App() {
       const storageKey = udemyUrlToStorageKey(normalizedUrl);
       const cachedCourse = readStorage<Course>(storageKey);
       if (cachedCourse) {
-        const { lessons, courseInfo } = cachedCourse;
+        const { lessons, courseInfo } 
+        = cachedCourse;
         if (Array.isArray(lessons) && lessons.length) {
           loadCourse({ lessons, courseInfo }, "cache");
           return;

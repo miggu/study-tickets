@@ -126,7 +126,9 @@
   color: #041022;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 120ms ease, box-shadow 120ms ease;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
   box-shadow: 0 10px 30px rgba(74, 115, 255, 0.35);
   min-width: 170px;
 }
@@ -342,7 +344,9 @@
   color: #041022;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 120ms ease, box-shadow 120ms ease;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
   box-shadow: 0 10px 30px rgba(74, 115, 255, 0.35);
 }
 

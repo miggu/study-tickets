@@ -38,7 +38,7 @@ describe("LessonTable", () => {
     });
     expect(HeaderElement).toBeInTheDocument();
     expect(
-      screen.getByText(/3\s*items/i, { selector: ".pill" })
+      screen.getByText(/3\s*items/i, { selector: ".pill" }),
     ).toBeInTheDocument();
   });
   it("works when user types and then clicks", async () => {});

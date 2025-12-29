@@ -30,7 +30,7 @@ export function StudyPlan({ lessons, loading, onPlanMessage }: Props) {
 
     const days = buildPlan(lessons, dailyHours);
     onPlanMessage?.(
-      `Built plan over ${days.length} day(s) at ${dailyHours}h/day.`
+      `Built plan over ${days.length} day(s) at ${dailyHours}h/day.`,
     );
   };
 

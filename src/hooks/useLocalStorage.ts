@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 
 export function useLocalStorage() {
-  const readStorage = useCallback(<T,>(key: string): T | null => {
+  const readStorage = useCallback(<T>(key: string): T | null => {
     if (typeof window === "undefined") return null;
     try {
       const stored = window.localStorage.getItem(key);

@@ -65,7 +65,7 @@ const normalizeDuration = (maybeText?: string, seconds?: number | null) => {
 
 const lessonsFromCurriculum = (
   data: CurriculumResponse,
-  courseTitle?: string
+  courseTitle?: string,
 ): { lessons: Lesson[]; courseInfo: CourseInfo | null } => {
   const lessons: Lesson[] = [];
   const context = data.curriculum_context?.data || data.data;
@@ -136,7 +136,7 @@ app.get("/api/curriculum", async (req: Request, res: Response) => {
       console.warn(
         "[curriculum] course id api failed",
         courseMetaResp.status,
-        text.slice(0, 200)
+        text.slice(0, 200),
       );
       res
         .status(courseMetaResp.status)
@@ -144,8 +144,8 @@ app.get("/api/curriculum", async (req: Request, res: Response) => {
         .send(
           `Failed to resolve course id (${courseMetaResp.status}). ${text.slice(
             0,
-            400
-          )}`
+            400,
+          )}`,
         );
       return;
     }
@@ -168,7 +168,7 @@ app.get("/api/curriculum", async (req: Request, res: Response) => {
       console.warn(
         "[curriculum] curriculum fetch failed",
         curriculumResp.status,
-        text.slice(0, 200)
+        text.slice(0, 200),
       );
       res
         .status(curriculumResp.status)
@@ -176,8 +176,8 @@ app.get("/api/curriculum", async (req: Request, res: Response) => {
         .send(
           `Failed to fetch curriculum (${curriculumResp.status}). ${text.slice(
             0,
-            400
-          )}`
+            400,
+          )}`,
         );
       return;
     }
@@ -185,7 +185,7 @@ app.get("/api/curriculum", async (req: Request, res: Response) => {
     const curriculum = (await curriculumResp.json()) as CurriculumResponse;
     const { lessons, courseInfo } = lessonsFromCurriculum(
       curriculum,
-      courseMeta.title
+      courseMeta.title,
     );
     res.json({ lessons, courseInfo });
   } catch (error) {

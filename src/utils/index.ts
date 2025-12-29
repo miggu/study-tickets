@@ -1,101 +1,117 @@
 export type Lesson = {
-  id: string
-  title: string
-  duration: string
-  section?: string
-}
+  id: string;
+  title: string;
+  duration: string;
+  section?: string;
+};
 
 export type PlanDay = {
-  day: number
-  totalSeconds: number
-  lessons: Lesson[]
-}
+  day: number;
+  totalSeconds: number;
+  lessons: Lesson[];
+};
 
 export type CourseInfo = {
-  courseTitle?: string
-  description?: string
-  sectionCount?: number
+  courseTitle?: string;
+  description?: string;
+  sectionCount?: number;
   syllabusSections?: Array<{
-    name?: string
-    timeRequired?: string
-  }>
-}
+    name?: string;
+    timeRequired?: string;
+  }>;
+};
 
 export type Course = {
-  lessons: Lesson[]
-  courseInfo: CourseInfo | null
-}
+  lessons: Lesson[];
+  courseInfo: CourseInfo | null;
+};
 
 export const formatSeconds = (seconds?: number | null) => {
-  if (seconds === undefined || seconds === null || Number.isNaN(seconds)) return undefined
-  const total = Math.max(0, Math.round(seconds))
-  const h = Math.floor(total / 3600)
-  const m = Math.floor((total % 3600) / 60)
-  const s = total % 60
-  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-  return `${m}:${String(s).padStart(2, '0')}`
-}
+  if (seconds === undefined || seconds === null || Number.isNaN(seconds))
+    return undefined;
+  const total = Math.max(0, Math.round(seconds));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  if (h > 0)
+    return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return `${m}:${String(s).padStart(2, "0")}`;
+};
 
 export const durationToSeconds = (duration?: string | null): number | null => {
-  if (!duration) return null
-  const lower = duration.toLowerCase()
-  if (lower.includes('question')) return 0
+  if (!duration) return null;
+  const lower = duration.toLowerCase();
+  if (lower.includes("question")) return 0;
 
   // mm:ss or hh:mm:ss
-  const colonParts = duration.split(':').map((p) => Number(p))
-  if (colonParts.length >= 2 && colonParts.length <= 3 && !colonParts.some((n) => Number.isNaN(n))) {
+  const colonParts = duration.split(":").map((p) => Number(p));
+  if (
+    colonParts.length >= 2 &&
+    colonParts.length <= 3 &&
+    !colonParts.some((n) => Number.isNaN(n))
+  ) {
     if (colonParts.length === 3) {
-      return colonParts[0] * 3600 + colonParts[1] * 60 + colonParts[2]
+      return colonParts[0] * 3600 + colonParts[1] * 60 + colonParts[2];
     }
-    return colonParts[0] * 60 + colonParts[1]
+    return colonParts[0] * 60 + colonParts[1];
   }
 
-  const hmsMatch = lower.match(/(?:(\d+)\s*h)?\s*(?:(\d+)\s*m)?\s*(?:(\d+)\s*s)?/)
+  const hmsMatch = lower.match(
+    /(?:(\d+)\s*h)?\s*(?:(\d+)\s*m)?\s*(?:(\d+)\s*s)?/,
+  );
   if (hmsMatch) {
-    const h = Number(hmsMatch[1] || 0)
-    const m = Number(hmsMatch[2] || 0)
-    const s = Number(hmsMatch[3] || 0)
-    if (!Number.isNaN(h) && !Number.isNaN(m) && !Number.isNaN(s) && (h || m || s)) {
-      return h * 3600 + m * 60 + s
+    const h = Number(hmsMatch[1] || 0);
+    const m = Number(hmsMatch[2] || 0);
+    const s = Number(hmsMatch[3] || 0);
+    if (
+      !Number.isNaN(h) &&
+      !Number.isNaN(m) &&
+      !Number.isNaN(s) &&
+      (h || m || s)
+    ) {
+      return h * 3600 + m * 60 + s;
     }
   }
 
-  const asNumber = Number(duration)
+  const asNumber = Number(duration);
   if (!Number.isNaN(asNumber) && asNumber > 0) {
-    return asNumber * 60
+    return asNumber * 60;
   }
 
-  return null
-}
+  return null;
+};
 
 export const normalizeUdemyCourseUrl = (
   input: string,
 ): { normalizedUrl: string | null; error?: string } => {
-  const trimmed = input.trim()
+  const trimmed = input.trim();
   if (!trimmed) {
-    return { normalizedUrl: null, error: 'Enter a Udemy course URL.' }
+    return { normalizedUrl: null, error: "Enter a Udemy course URL." };
   }
 
-  let parsed: URL
+  let parsed: URL;
   try {
-    parsed = new URL(trimmed)
+    parsed = new URL(trimmed);
   } catch {
-    return { normalizedUrl: null, error: 'Enter a valid URL.' }
+    return { normalizedUrl: null, error: "Enter a valid URL." };
   }
 
-  const host = parsed.hostname.toLowerCase()
-  if (host !== 'www.udemy.com' && host !== 'udemy.com') {
-    return { normalizedUrl: null, error: 'URL must be from udemy.com.' }
+  const host = parsed.hostname.toLowerCase();
+  if (host !== "www.udemy.com" && host !== "udemy.com") {
+    return { normalizedUrl: null, error: "URL must be from udemy.com." };
   }
 
-  const segments = parsed.pathname.split('/').filter(Boolean)
-  if (segments.length < 2 || segments[0] !== 'course' || !segments[1]) {
-    return { normalizedUrl: null, error: 'URL must look like /course/your-slug.' }
+  const segments = parsed.pathname.split("/").filter(Boolean);
+  if (segments.length < 2 || segments[0] !== "course" || !segments[1]) {
+    return {
+      normalizedUrl: null,
+      error: "URL must look like /course/your-slug.",
+    };
   }
 
-  const slug = segments[1]
-  return { normalizedUrl: `https://www.udemy.com/course/${slug}/` }
-}
+  const slug = segments[1];
+  return { normalizedUrl: `https://www.udemy.com/course/${slug}/` };
+};
 
 export const udemyUrlToStorageKey = (url: string) =>
-  `udemy-organise.course.${encodeURIComponent(url)}`
+  `udemy-organise.course.${encodeURIComponent(url)}`;

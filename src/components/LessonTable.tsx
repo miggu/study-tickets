@@ -33,7 +33,7 @@ export function LessonTable({
   }, [lessons]);
 
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
 
   useEffect(() => {
