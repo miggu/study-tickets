@@ -13,7 +13,7 @@ export function CourseInfoPanel({
       <div className="panel__header">
         <div>
           <p className="hero__eyebrow">Course</p>
-          <h2>Course info</h2>
+          <h2>{courseTitle}</h2>
         </div>
         <span className="pill pill--ghost">{`${sectionLength} sections`}</span>
       </div>
