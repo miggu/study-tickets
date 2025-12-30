@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+if git diff --cached -U0 | rg "^\+.*console\.(log|debug|info|warn|error)\b" >/dev/null; then
+  echo "Error: console statements found in staged changes."
+  echo "Remove them before committing."
+  exit 1
+fi
