@@ -63,7 +63,7 @@ export function StudyPlan({ lessons, loading, onPlanMessage }: Props) {
       {plan.length > 0 && (
         <div className="plan__list">
           {plan.map((day) => (
-            <PlanDayCard day={day} key={day.day} />
+            <PlanDayCard {...day} key={day.day} />
           ))}
         </div>
       )}

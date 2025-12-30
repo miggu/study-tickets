@@ -1,20 +1,18 @@
 import { formatSeconds, type PlanDay } from "../utils";
 
-type Props = {
-  day: PlanDay;
-};
+type Props = PlanDay;
 
-export function PlanDayCard({ day }: Props) {
+export function PlanDayCard({ day, totalSeconds, lessons }: Props) {
   return (
     <div className="plan__day">
       <div className="plan__day-header">
-        <span className="pill">Day {day.day}</span>
+        <span className="pill">Day {day}</span>
         <span className="sections__duration">
-          {formatSeconds(day.totalSeconds) || "—"}
+          {formatSeconds(totalSeconds) || "—"}
         </span>
       </div>
       <div className="plan__day-lessons">
-        {day.lessons.map((lesson, idx) => (
+        {lessons.map((lesson, idx) => (
           <div className="sections__lesson" key={lesson.id}>
             <div className="sections__lesson-index">{idx + 1}</div>
             <div className="sections__lesson-text">

@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 staged_files="$(git diff --cached --name-only --diff-filter=ACM)"
 if [ -z "$staged_files" ]; then
   exit 0
@@ -16,3 +17,6 @@ if [ -n "$matched_files" ]; then
   echo "Remove them before committing."
   exit 1
 fi
+=======
+npm test
+>>>>>>> Stashed changes
