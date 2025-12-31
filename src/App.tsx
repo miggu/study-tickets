@@ -109,6 +109,8 @@ function App() {
     setStatus("Removed a lesson.");
   };
 
+  const { courseTitle } = courseInfo || {};
+
   return (
     <div className="app">
       <HeroHeader
@@ -135,7 +137,7 @@ function App() {
           onRemoveSection={removeSection}
         />
 
-        <StudyPlan lessons={lessons} loading={loading} />
+        <StudyPlan key={courseTitle} lessons={lessons} loading={loading} />
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { usePlanBuilder } from "../hooks/usePlanBuilder";
 import { type Lesson } from "../utils";
 import { PlanDayCard } from "./PlanDayCard";
@@ -14,13 +14,8 @@ export function StudyPlan({ lessons, loading }: Props) {
     text: string;
     isError: boolean;
   } | null>(null);
-  const { plan, setPlan, buildPlan } = usePlanBuilder();
+  const { plan, buildPlan } = usePlanBuilder();
   const hasLessons = lessons.length > 0;
-
-  useEffect(() => {
-    setPlan([]);
-    setPlanMessage(null);
-  }, [lessons]);
 
   const generatePlan = () => {
     if (dailyHours === 0) {
