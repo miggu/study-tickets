@@ -20,16 +20,18 @@ export function StudyPlan({ lessons, loading }: Props) {
   useEffect(() => {
     setPlan([]);
     setPlanMessage(null);
-  }, [lessons, setPlan]);
+  }, [lessons]);
 
   const generatePlan = () => {
-    if (!dailyHours || dailyHours <= 0) {
+    if (dailyHours === 0) {
       setPlanMessage({
         text: "Enter daily hours greater than 0.",
         isError: true,
       });
       return;
     }
+
+    setPlanMessage(null); // Clear any previous error messages
 
     const days = buildPlan(lessons, dailyHours);
     setPlanMessage({
