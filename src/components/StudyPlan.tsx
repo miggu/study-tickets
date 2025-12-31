@@ -6,37 +6,39 @@ import { PlanDayCard } from "./PlanDayCard";
 type Props = {
   lessons: Lesson[];
   loading?: boolean;
-  onPlanMessage?: (message: string) => void;
 };
 
-export function StudyPlan({ lessons, loading, onPlanMessage }: Props) {
+export function StudyPlan({ lessons, loading }: Props) {
   const [dailyHours, setDailyHours] = useState<number>(2);
+  const [planMessage, setPlanMessage] = useState<{
+    text: string;
+    isError: boolean;
+  } | null>(null);
   const { plan, setPlan, buildPlan } = usePlanBuilder();
   const hasLessons = lessons.length > 0;
 
   useEffect(() => {
     setPlan([]);
+    setPlanMessage(null);
   }, [lessons, setPlan]);
 
   const generatePlan = () => {
-    if (!hasLessons) {
-      onPlanMessage?.("Import a course first.");
-      return;
-    }
     if (!dailyHours || dailyHours <= 0) {
-      onPlanMessage?.("Enter daily hours greater than 0.");
+      setPlanMessage({
+        text: "Enter daily hours greater than 0.",
+        isError: true,
+      });
       return;
     }
 
     const days = buildPlan(lessons, dailyHours);
-    onPlanMessage?.(
-      `Built plan over ${days.length} day(s) at ${dailyHours}h/day.`,
-    );
+    setPlanMessage({
+      text: `Built plan over ${days.length} day(s) at ${dailyHours}h/day.`,
+      isError: false,
+    });
   };
 
-  if (!hasLessons) return null;
-
-  return (
+  return hasLessons ? (
     <section className="panel panel--plan">
       <div className="panel__header">
         <div>
@@ -53,12 +55,28 @@ export function StudyPlan({ lessons, loading, onPlanMessage }: Props) {
             min="0.25"
             step="0.25"
             value={dailyHours}
-            onChange={(e) => setDailyHours(Number(e.target.value))}
+            onChange={(e) => {
+              const nextValue = Number(e.target.value);
+              setDailyHours(nextValue);
+              if (planMessage?.isError && nextValue > 0) {
+                setPlanMessage(null);
+              }
+            }}
           />
           <button type="button" onClick={generatePlan} disabled={loading}>
             Build plan
           </button>
         </div>
+        {planMessage && (
+          <p
+            className={`plan__message ${
+              planMessage.isError ? "plan__message--error" : ""
+            }`}
+            role={planMessage.isError ? "alert" : undefined}
+          >
+            {planMessage.text}
+          </p>
+        )}
       </div>
       {plan.length > 0 && (
         <div className="plan__list">
@@ -68,5 +86,5 @@ export function StudyPlan({ lessons, loading, onPlanMessage }: Props) {
         </div>
       )}
     </section>
-  );
+  ) : null;
 }

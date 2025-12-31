@@ -67,8 +67,7 @@ function App() {
       const storageKey = udemyUrlToStorageKey(normalizedUrl);
       const cachedCourse = readStorage<Course>(storageKey);
       if (cachedCourse) {
-        const { lessons, courseInfo } 
-        = cachedCourse;
+        const { lessons, courseInfo } = cachedCourse;
         if (Array.isArray(lessons) && lessons.length) {
           loadCourse({ lessons, courseInfo }, "cache");
           return;
@@ -136,11 +135,7 @@ function App() {
           onRemoveSection={removeSection}
         />
 
-        <StudyPlan
-          lessons={lessons}
-          loading={loading}
-          onPlanMessage={setStatus}
-        />
+        <StudyPlan lessons={lessons} loading={loading} />
       </div>
     </div>
   );

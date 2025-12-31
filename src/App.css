@@ -315,6 +315,16 @@
   gap: 10px;
 }
 
+.plan__message {
+  color: #9db1d8;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.plan__message--error {
+  color: #ff9fa6;
+}
+
 .plan__form label {
   font-weight: 600;
   color: #c6d4f1;
