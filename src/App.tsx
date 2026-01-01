@@ -132,6 +132,7 @@ function App() {
 
       <div className="layout">
         <LessonTable
+          key={courseTitle}
           lessons={lessons}
           onRemoveLesson={removeLesson}
           onRemoveSection={removeSection}

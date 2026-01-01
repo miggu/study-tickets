@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { durationToSeconds, type Lesson } from "../utils";
 import { SectionBlock, type SectionGroup } from "./SectionBlock";
 
@@ -35,14 +35,6 @@ export function LessonTable({
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(),
   );
-
-  useEffect(() => {
-    if (sectionGroups.length === 0) {
-      setExpandedSections(new Set());
-      return;
-    }
-    setExpandedSections(new Set([sectionGroups[0].title]));
-  }, [sectionGroups]);
 
   const toggleSection = (title: string) => {
     setExpandedSections((prev) => {
