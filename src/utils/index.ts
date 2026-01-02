@@ -93,7 +93,7 @@ export const normalizeUdemyCourseUrl = (
   try {
     parsed = new URL(trimmed);
   } catch {
-    return { normalizedUrl: null, error: "Enter a valid URL." };
+    return { normalizedUrl: null, error: "Enter a valid Udemy course URL." };
   }
 
   const host = parsed.hostname.toLowerCase();

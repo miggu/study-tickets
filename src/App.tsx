@@ -132,13 +132,19 @@ function App() {
 
       <div className="layout">
         <LessonTable
-          key={courseTitle}
+          key={
+            courseTitle ? `lesson-table-${courseTitle}` : "lesson-table-default"
+          }
           lessons={lessons}
           onRemoveLesson={removeLesson}
           onRemoveSection={removeSection}
         />
 
-        <StudyPlan key={courseTitle} lessons={lessons} loading={loading} />
+        <StudyPlan
+          key={courseTitle ? `study-plan-${courseTitle}` : "study-plan-default"}
+          lessons={lessons}
+          loading={loading}
+        />
       </div>
     </div>
   );
