@@ -1,7 +1,5 @@
 import { type PlanDay } from "../utils";
-import { useTrello } from "../hooks/useTrello";
 import { useState } from "react";
-import { createBoard, createList, createCard } from "../utils/trello";
 
 type Props = {
   plan: PlanDay[];
@@ -9,93 +7,44 @@ type Props = {
 };
 
 export function SendToTrello({ plan, courseTitle }: Props) {
-  const { apiKey, setApiKey, token, setToken, getTrelloCredentials } =
-    useTrello();
-  const [showCredentials, setShowCredentials] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [boardUrl, setBoardUrl] = useState<string | null>(null);
 
   const handleSendToTrello = async () => {
-    const credentials = getTrelloCredentials();
-    if (!credentials) {
-      setShowCredentials(true);
-      return;
-    }
-
     setLoading(true);
     setError(null);
+    setBoardUrl(null);
 
     try {
-      const board = await createBoard(
-        courseTitle,
-        credentials.apiKey,
-        credentials.token,
-      );
+      const response = await fetch("/api/trello/create-board", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          courseTitle,
+          plan,
+        }),
+      });
 
-      for (const day of plan) {
-        const list = await createList(
-          board.id,
-          `Day ${day.day}`,
-          credentials.apiKey,
-          credentials.token,
-        );
-
-        for (const lesson of day.lessons) {
-          await createCard(
-            list.id,
-            lesson.title,
-            `Section: ${lesson.section}`,
-            credentials.apiKey,
-            credentials.token,
-          );
-        }
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to send to Trello.");
       }
+
+      const { boardUrl: newBoardUrl } = await response.json();
+      setBoardUrl(newBoardUrl);
     } catch (error) {
-      setError("Failed to send to Trello. Please check your credentials.");
+      const message =
+        error instanceof Error
+          ? error.message
+          : "An unknown error occurred. Ensure Trello credentials are set on the server.";
+      setError(message);
     } finally {
       setLoading(false);
     }
   };
-
-  if (!apiKey || !token || showCredentials) {
-    return (
-      <div>
-        <h3>Trello Credentials</h3>
-        <p>
-          To send your study plan to Trello, you need to provide your API key
-          and token. You can get them from{" "}
-          <a
-            href="https://trello.com/app-key"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            here
-          </a>
-          .
-        </p>
-        <div className="plan__form">
-          <label htmlFor="trello-api-key">API Key</label>
-          <input
-            id="trello-api-key"
-            type="password"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-          />
-          <label htmlFor="trello-token">Token</label>
-          <input
-            id="trello-token"
-            type="password"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-          />
-          <button type="button" onClick={() => setShowCredentials(false)}>
-            Save
-          </button>
-        </div>
-        {error && <p className="plan__message--error">{error}</p>}
-      </div>
-    );
-  }
 
   return (
     <>
@@ -103,6 +52,14 @@ export function SendToTrello({ plan, courseTitle }: Props) {
         {loading ? "Sending..." : "Send to Trello"}
       </button>
       {error && <p className="plan__message--error">{error}</p>}
+      {boardUrl && (
+        <p className="plan__message">
+          Successfully created Trello board:{" "}
+          <a href={boardUrl} target="_blank" rel="noopener noreferrer">
+            {boardUrl}
+          </a>
+        </p>
+      )}
     </>
   );
 }

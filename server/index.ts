@@ -1,7 +1,10 @@
 import express, { type Request, type Response } from "express";
+import fs from "node:fs";
+import path from "node:path";
 
 const PORT = Number(process.env.PORT || process.env.BACKEND_PORT || 3001);
 const app = express();
+app.use(express.json());
 
 type LessonDTO = {
   id: string;
@@ -45,6 +48,39 @@ type CurriculumResponse = {
   };
   data?: CurriculumContext;
 };
+
+type PlanDay = {
+  day: number;
+  totalSeconds: number;
+  lessons: (LessonDTO & { section: string })[];
+};
+
+let trelloCredentials: { apiKey: string; token: string } | null = null;
+
+function loadTrelloCredentials() {
+  const secretsPath = path.join(
+    process.cwd(),
+    "dev-untracked",
+    "trello-secrets.json",
+  );
+  try {
+    const data = fs.readFileSync(secretsPath, "utf8");
+    trelloCredentials = JSON.parse(data);
+    console.log("[SERVER] Trello credentials loaded successfully.");
+  } catch (error) {
+    console.warn(
+      "[SERVER] Could not load Trello credentials from dev-untracked/trello-secrets.json:",
+      error instanceof Error ? error.message : String(error),
+    );
+    console.warn(
+      "[SERVER] Trello integration will require manual API Key and Token input if not using environment variables.",
+    );
+    trelloCredentials = null; // Ensure it's null if loading fails
+  }
+}
+
+// Load credentials on server startup
+loadTrelloCredentials();
 
 const formatSeconds = (seconds?: number | null) => {
   if (seconds === undefined || seconds === null || Number.isNaN(seconds))
@@ -109,6 +145,113 @@ const transformCurriculum = (
 
 app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ ok: true });
+});
+
+app.post("/api/trello/create-board", async (req: Request, res: Response) => {
+  if (!trelloCredentials) {
+    return res.status(500).send("Trello credentials not loaded on server.");
+  }
+
+  const { apiKey, token } = trelloCredentials; // Use pre-loaded credentials
+  const {
+    courseTitle,
+    plan,
+  }: {
+    courseTitle: string;
+    plan: PlanDay[];
+  } = req.body;
+
+  if (!courseTitle || !plan) {
+    return res.status(400).send("Missing required parameters.");
+  }
+
+  // --- Debug File: Request Payload ---
+  try {
+    const payloadPath = path.join(
+      process.cwd(),
+      "dev-untracked",
+      "trello-request-payload.json",
+    );
+    fs.writeFileSync(
+      payloadPath,
+      JSON.stringify({ courseTitle, plan }, null, 2),
+      "utf8",
+    );
+    console.log("[SERVER] Wrote Trello request payload to debug file.");
+  } catch (debugError) {
+    console.warn("[SERVER] Failed to write Trello request debug file:", debugError);
+  }
+  // --- End Debug File ---
+
+  const TRELLO_API_URL = "https://api.trello.com/1";
+
+  try {
+    // 1. Create Board
+    const boardResponse = await fetch(
+      `${TRELLO_API_URL}/boards?name=${encodeURIComponent(
+        courseTitle,
+      )}&key=${apiKey}&token=${token}&defaultLists=false`,
+      { method: "POST" },
+    );
+    if (!boardResponse.ok) {
+      const errorText = await boardResponse.text();
+      console.error("Trello board creation failed:", errorText);
+      throw new Error("Failed to create Trello board.");
+    }
+    const board = await boardResponse.json();
+
+    // --- Debug File: Board Response ---
+    try {
+      const responsePath = path.join(
+        process.cwd(),
+        "dev-untracked",
+        "trello-board-response.json",
+      );
+      fs.writeFileSync(responsePath, JSON.stringify(board, null, 2), "utf8");
+      console.log("[SERVER] Wrote Trello board response to debug file.");
+    } catch (debugError) {
+      console.warn("[SERVER] Failed to write Trello response debug file:", debugError);
+    }
+    // --- End Debug File ---
+
+
+    // 2. Create Lists and Cards
+    for (const day of plan) {
+      const listResponse = await fetch(
+        `${TRELLO_API_URL}/lists?name=${encodeURIComponent(
+          `Day ${day.day}`,
+        )}&idBoard=${board.id}&key=${apiKey}&token=${token}`,
+        { method: "POST" },
+      );
+      if (!listResponse.ok) {
+        throw new Error(`Failed to create list for Day ${day.day}.`);
+      }
+      const list = await listResponse.json();
+
+      for (const lesson of day.lessons) {
+        const cardResponse = await fetch(
+          `${TRELLO_API_URL}/cards?idList=${
+            list.id
+          }&name=${encodeURIComponent(
+            lesson.title,
+          )}&desc=${encodeURIComponent(
+            `Section: ${lesson.section}`,
+          )}&key=${apiKey}&token=${token}`,
+          { method: "POST" },
+        );
+        if (!cardResponse.ok) {
+          throw new Error(`Failed to create card: ${lesson.title}.`);
+        }
+      }
+    }
+
+    res.json({ ok: true, boardUrl: board.url });
+  } catch (error) {
+    console.error("Trello integration failed:", error);
+    const message =
+      error instanceof Error ? error.message : "An unknown error occurred.";
+    res.status(500).send(message);
+  }
 });
 
 app.get("/api/curriculum", async (req: Request, res: Response) => {
