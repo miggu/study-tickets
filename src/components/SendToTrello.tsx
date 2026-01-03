@@ -1,5 +1,6 @@
 import { type PlanDay } from "../utils";
 import { useState } from "react";
+import { trello } from "../svgs/trello"; // Import the trello function
 
 type Props = {
   plan: PlanDay[];
@@ -48,8 +49,17 @@ export function SendToTrello({ plan, courseTitle }: Props) {
 
   return (
     <>
-      <button type="button" onClick={handleSendToTrello} disabled={loading} className="button-primary">
-        {loading ? "Sending..." : "Send to Trello"}
+      <button type="button" onClick={handleSendToTrello} disabled={loading} className="button-primary send-to-trello-button">
+        {loading ? (
+          "Sending..."
+        ) : (
+          <>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {trello()}
+            </svg>
+            Send to Trello
+          </>
+        )}
       </button>
       {error && <p className="plan__message--error">{error}</p>}
       {boardUrl && (
