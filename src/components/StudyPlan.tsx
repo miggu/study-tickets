@@ -2,13 +2,15 @@ import { useState } from "react";
 import { usePlanBuilder } from "../hooks/usePlanBuilder";
 import { type Section } from "../utils";
 import { PlanDayCard } from "./PlanDayCard";
+import { SendToTrello } from "./SendToTrello";
 
 type Props = {
   sections: Section[];
   loading?: boolean;
+  courseTitle?: string;
 };
 
-export function StudyPlan({ sections, loading }: Props) {
+export function StudyPlan({ sections, loading, courseTitle }: Props) {
   const [dailyHours, setDailyHours] = useState<number>(2);
   const [planMessage, setPlanMessage] = useState<{
     text: string;
@@ -41,6 +43,9 @@ export function StudyPlan({ sections, loading }: Props) {
           <p className="hero__eyebrow">Study plan</p>
           <h2>Split by daily time</h2>
         </div>
+        {plan.length > 0 && (
+          <SendToTrello plan={plan} courseTitle={courseTitle || "Study Plan"} />
+        )}
       </div>
       <div className="plan__form">
         <label htmlFor="dailyHours">Daily hours</label>
