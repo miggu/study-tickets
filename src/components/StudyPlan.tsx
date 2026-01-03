@@ -64,7 +64,7 @@ export function StudyPlan({ sections, loading, courseTitle }: Props) {
               }
             }}
           />
-          <button type="button" onClick={generatePlan} disabled={loading}>
+          <button type="button" onClick={generatePlan} disabled={loading} className="button-primary">
             Build plan
           </button>
         </div>
