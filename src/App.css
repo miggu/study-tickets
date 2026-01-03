@@ -295,6 +295,11 @@
   color: #d7deeb;
 }
 
+.sections__lesson .sections__duration {
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
 .sections__action {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
