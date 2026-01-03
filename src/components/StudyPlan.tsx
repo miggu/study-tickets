@@ -15,7 +15,6 @@ export function StudyPlan({ lessons, loading }: Props) {
     isError: boolean;
   } | null>(null);
   const { plan, buildPlan } = usePlanBuilder();
-  const hasLessons = lessons.length > 0;
 
   const generatePlan = () => {
     if (dailyHours === 0) {
@@ -35,7 +34,7 @@ export function StudyPlan({ lessons, loading }: Props) {
     });
   };
 
-  return hasLessons ? (
+  return (
     <section className="panel panel--plan">
       <div className="panel__header">
         <div>
@@ -83,5 +82,5 @@ export function StudyPlan({ lessons, loading }: Props) {
         </div>
       )}
     </section>
-  ) : null;
+  );
 }

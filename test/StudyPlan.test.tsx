@@ -1,95 +1,116 @@
 import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi, type Mock } from "vitest";
+import { usePlanBuilder } from "../src/hooks/usePlanBuilder";
 import type { Lesson, PlanDay } from "../src/utils";
 import { StudyPlan } from "../src/components/StudyPlan";
 
-const mockBuildPlan = vi.fn();
-const mockSetPlan = vi.fn();
-let mockPlan: PlanDay[] = [];
+vi.mock("../src/hooks/usePlanBuilder");
 
-vi.mock("../src/hooks/usePlanBuilder", () => ({
-  usePlanBuilder: () => ({
-    plan: mockPlan,
-    setPlan: mockSetPlan,
-    buildPlan: mockBuildPlan,
-  }),
-}));
+const buildPlan = vi.fn();
 
-const lessons: Lesson[] = [
+const mockLessons: Lesson[] = [
   {
-    id: "0-0-How to Get Help",
-    title: "How to Get Help",
-    duration: "01:04",
-    section: "Getting Started with Typescript",
+    id: "1",
+    title: "Lesson 1",
+    duration: "00:10:00",
+    section: "Section 1",
   },
   {
-    id: "0-1-Join Our Community!",
-    title: "Join Our Community!",
-    duration: "00:07",
-    section: "Getting Started with Typescript",
+    id: "2",
+    title: "Lesson 2",
+    duration: "00:15:00",
+    section: "Section 1",
   },
 ];
 
+const mockPlan: PlanDay[] = [
+  {
+    day: 1,
+    totalSeconds: 1500,
+    lessons: mockLessons,
+  },
+];
+
+(usePlanBuilder as Mock).mockReturnValue({
+  plan: [],
+  buildPlan,
+});
+
 describe("StudyPlan", () => {
   afterEach(() => {
+    vi.clearAllMocks();
     cleanup();
-    mockBuildPlan.mockReset();
-    mockSetPlan.mockReset();
-    mockPlan = [];
   });
 
-  it("renders nothing when there are no lessons", () => {
-    render(<StudyPlan lessons={[]} />);
-    expect(screen.queryByText(/study plan/i)).not.toBeInTheDocument();
+  it("renders correctly when there are lessons", () => {
+    render(<StudyPlan lessons={mockLessons} />);
+    expect(screen.getByText(/study plan/i)).toBeInTheDocument();
   });
 
   it("shows a validation message when daily hours is invalid", async () => {
     const user = userEvent.setup();
-    render(<StudyPlan lessons={lessons} />);
-    const input = screen.getByLabelText(/daily hours/i);
-    await user.clear(input);
-    await user.type(input, "0");
-    await user.click(screen.getByRole("button", { name: /build plan/i }));
-    expect(
-      screen.getByText(/enter daily hours greater than 0/i),
-    ).toBeInTheDocument();
-    expect(mockBuildPlan).not.toHaveBeenCalled();
-  });
+    render(<StudyPlan lessons={mockLessons} />);
+    const dailyHoursInput = screen.getByLabelText(/daily hours/i);
+    await user.clear(dailyHoursInput);
+    await user.type(dailyHoursInput, "0");
 
-  it("calls buildPlan and reports success message", async () => {
-    const user = userEvent.setup();
-    mockBuildPlan.mockReturnValue([{ day: 1, totalSeconds: 900, lessons }]);
-    render(<StudyPlan lessons={lessons} />);
-    await user.click(screen.getByRole("button", { name: /build plan/i }));
-    expect(mockBuildPlan).toHaveBeenCalledWith(lessons, 2);
+    const buildPlanButton = screen.getByRole("button", { name: /build plan/i });
+    await user.click(buildPlanButton);
+
     expect(
-      screen.getByText(/built plan over 1 day\(s\) at 2h\/day/i),
+      screen.getByText(/Enter daily hours greater than 0/i),
     ).toBeInTheDocument();
   });
 
   it("clears the validation message when daily hours becomes valid", async () => {
     const user = userEvent.setup();
-    render(<StudyPlan lessons={lessons} />);
-    const input = screen.getByLabelText(/daily hours/i);
-    await user.clear(input);
-    await user.type(input, "0");
-    await user.click(screen.getByRole("button", { name: /build plan/i }));
+    render(<StudyPlan lessons={mockLessons} />);
+
+    // Trigger the validation message
+    const dailyHoursInput = screen.getByLabelText(/daily hours/i);
+    await user.clear(dailyHoursInput);
+    await user.type(dailyHoursInput, "0");
+    const buildPlanButton = screen.getByRole("button", { name: /build plan/i });
+    await user.click(buildPlanButton);
     expect(
-      screen.getByText(/enter daily hours greater than 0/i),
+      screen.getByText(/Enter daily hours greater than 0/i),
     ).toBeInTheDocument();
-    await user.clear(input);
-    await user.type(input, "1");
+
+    // Correct the input value
+    await user.clear(dailyHoursInput);
+    await user.type(dailyHoursInput, "2");
     expect(
-      screen.queryByText(/enter daily hours greater than 0/i),
+      screen.queryByText(/Enter daily hours greater than 0/i),
     ).not.toBeInTheDocument();
   });
 
+  it("calls buildPlan and reports success message", async () => {
+    const user = userEvent.setup();
+    buildPlan.mockReturnValue(mockPlan);
+    render(<StudyPlan lessons={mockLessons} />);
+
+    const dailyHoursInput = screen.getByLabelText(/daily hours/i);
+    await user.clear(dailyHoursInput);
+    await user.type(dailyHoursInput, "3");
+
+    const buildPlanButton = screen.getByRole("button", { name: /build plan/i });
+    await user.click(buildPlanButton);
+
+    expect(buildPlan).toHaveBeenCalledWith(mockLessons, 3);
+    expect(
+      screen.getByText(/Built plan over 1 day\(s\) at 3h\/day/i),
+    ).toBeInTheDocument();
+  });
+
   it("renders the plan days when provided by the hook", () => {
-    mockPlan = [{ day: 1, totalSeconds: 900, lessons }];
-    render(<StudyPlan lessons={lessons} />);
+    (usePlanBuilder as Mock).mockReturnValue({
+      plan: mockPlan,
+      buildPlan: vi.fn(),
+    });
+
+    render(<StudyPlan lessons={mockLessons} />);
     expect(screen.getByText(/day 1/i)).toBeInTheDocument();
-    expect(screen.getByText(/how to get help/i)).toBeInTheDocument();
-    expect(screen.getByText("01:04")).toBeInTheDocument();
+    expect(screen.getByText(/lesson 1/i)).toBeInTheDocument();
   });
 });

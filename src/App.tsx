@@ -139,12 +139,15 @@ function App() {
           onRemoveLesson={removeLesson}
           onRemoveSection={removeSection}
         />
-
-        <StudyPlan
-          key={courseTitle ? `study-plan-${courseTitle}` : "study-plan-default"}
-          lessons={lessons}
-          loading={loading}
-        />
+        {lessons.length > 0 && (
+          <StudyPlan
+            key={
+              courseTitle ? `study-plan-${courseTitle}` : "study-plan-default"
+            }
+            lessons={lessons}
+            loading={loading}
+          />
+        )}
       </div>
     </div>
   );
