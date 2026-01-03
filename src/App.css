@@ -439,3 +439,7 @@
     width: 100%;
   }
 }
+.pill-group {
+  display: flex;
+  gap: 10px;
+}

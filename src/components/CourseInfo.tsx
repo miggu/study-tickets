@@ -1,3 +1,4 @@
+import { getFormattedCourseDuration } from "../utils";
 import type { CourseInfo as CourseInfoType } from "../utils";
 
 type CourseInfoProps = CourseInfoType;
@@ -8,6 +9,8 @@ export function CourseInfoPanel({
   syllabusSections = [],
 }: CourseInfoProps) {
   const sectionLength = syllabusSections.length;
+  const courseDuration = getFormattedCourseDuration(syllabusSections);
+
   return (
     <section className="panel">
       <div className="panel__header">
@@ -15,7 +18,10 @@ export function CourseInfoPanel({
           <p className="hero__eyebrow">Course</p>
           <h2>{courseTitle}</h2>
         </div>
-        <span className="pill pill--ghost">{`${sectionLength} sections`}</span>
+        <div className="pill-group">
+          <span className="pill pill--ghost">{`${sectionLength} sections`}</span>
+          <span className="pill pill--ghost">{courseDuration}</span>
+        </div>
       </div>
       <p className="course-form__hint">{description}</p>
       <p className="course-form__hint">

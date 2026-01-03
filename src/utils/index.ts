@@ -1,3 +1,32 @@
+export const formatDuration = (totalSeconds: number) => {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+
+  return `${minutes}m`;
+};
+
+export const getFormattedCourseDuration = (
+  syllabusSections?: Array<{ name?: string; timeRequired?: string }>,
+) => {
+  if (!syllabusSections) return undefined;
+
+  const totalDurationInSeconds = syllabusSections.reduce((acc, section) => {
+    if (section.timeRequired) {
+      const seconds = durationToSeconds(section.timeRequired);
+      if (seconds) {
+        return acc + seconds;
+      }
+    }
+    return acc;
+  }, 0);
+
+  return formatDuration(totalDurationInSeconds);
+};
+
 export type Lesson = {
   id: string;
   title: string;
