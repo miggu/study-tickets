@@ -48,7 +48,7 @@ export function SendToTrello({ plan, courseTitle }: Props) {
 
   return (
     <>
-      <button type="button" onClick={handleSendToTrello} disabled={loading}>
+      <button type="button" onClick={handleSendToTrello} disabled={loading} className="plan__input-row button">
         {loading ? "Sending..." : "Send to Trello"}
       </button>
       {error && <p className="plan__message--error">{error}</p>}
