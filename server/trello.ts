@@ -1,7 +1,7 @@
 import { type Request, type Response } from "express";
 import fs from "node:fs";
 import path from "node:path";
-import { type PlanDay, type LessonDTO } from "./types";
+import { type PlanDay, type LessonDTO, type TrelloLabel, type TrelloList } from "./types.js";
 
 let trelloCredentials: { apiKey: string; token: string } | null = null;
 
@@ -180,14 +180,6 @@ export const createTrelloBoardHandler = async (req: Request, res: Response) => {
       `${TRELLO_API_URL}/boards/${board.id}/labels?key=${apiKey}&token=${token}`,
     );
     if (!labelsResponse.ok) throw new Error("Failed to get board labels.");
-interface TrelloLabel {
-  id: string;
-  name: string;
-  color: string;
-}
-
-// ... later in the code ...
-
     const labels = await labelsResponse.json();
     const redLabel = labels.find((label: TrelloLabel) => label.color === "red");
     const redLabelId = redLabel ? redLabel.id : null;
@@ -200,7 +192,7 @@ interface TrelloLabel {
     // Step 3: Create all "Day" lists sequentially to preserve order
     if (process.env.DEBUG_TRELLO === "true")
       console.log("[TRELLO] Creating Day lists sequentially...");
-    const dayLists = [];
+    const dayLists: TrelloList[] = [];
     for (const day of plan) {
       const listResponse = await fetch(
         `${TRELLO_API_URL}/lists?name=${encodeURIComponent(
@@ -219,7 +211,7 @@ interface TrelloLabel {
     // Step 4: Group lessons by section for each day
     const dailySections = plan.map((day) => {
       const sectionsMap = new Map<string, LessonDTO[]>();
-      day.lessons.forEach((lesson) => {
+      day.lessons.forEach((lesson: LessonDTO) => {
         if (!sectionsMap.has(lesson.section)) {
           sectionsMap.set(lesson.section, []);
         }

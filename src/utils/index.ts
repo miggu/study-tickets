@@ -31,6 +31,7 @@ export type Lesson = {
   id: string;
   title: string;
   duration: string;
+  section: string; // Added section property
 };
 
 export type Section = {

@@ -47,3 +47,15 @@ export type PlanDay = {
   totalSeconds: number;
   lessons: (LessonDTO & { section: string })[];
 };
+
+export interface TrelloLabel {
+  id: string;
+  name: string;
+  color: string;
+}
+
+export interface TrelloList {
+  id: string;
+  name: string;
+}
+

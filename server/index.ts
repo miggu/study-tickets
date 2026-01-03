@@ -1,11 +1,13 @@
 import express, { type Request, type Response } from "express";
-import { createTrelloBoardHandler } from "./trello";
+import { createTrelloBoardHandler } from "./trello.js";
 import {
   type LessonDTO,
   type SectionDTO,
   type CourseDataDTO,
+  type CurriculumItem,
+  type CurriculumSection,
   type CurriculumResponse,
-} from "./types";
+} from "./types.js";
 
 const PORT = Number(process.env.PORT || process.env.BACKEND_PORT || 3001);
 const app = express();
@@ -37,13 +39,13 @@ const transformCurriculum = (
   const sections = context?.sections || [];
 
   const transformedSections: SectionDTO[] = sections.map(
-    (section, sectionIndex) => {
+    (section: CurriculumSection, sectionIndex: number) => {
       const title =
         section.title || section.name || `Section ${sectionIndex + 1}`;
       const items = section.items || [];
 
       const lessons: LessonDTO[] = items
-        .map((item, itemIndex) => {
+        .map((item: CurriculumItem, itemIndex: number) => {
           const itemTitle = item.title || item.name;
           if (!itemTitle) return null;
           const duration =
@@ -57,7 +59,7 @@ const transformCurriculum = (
             section: title, // Add section title here
           };
         })
-        .filter((lesson): lesson is LessonDTO => lesson !== null);
+        .filter((lesson: LessonDTO | null): lesson is LessonDTO => lesson !== null);
 
       return {
         title,
@@ -166,3 +168,4 @@ app.get("/api/curriculum", async (req: Request, res: Response) => {
 app.listen(PORT, () => {
   console.log(`[SERVER] Backend server listening on http://localhost:${PORT}`);
 });
+
