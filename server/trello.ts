@@ -6,6 +6,17 @@ import { type PlanDay, type LessonDTO, type TrelloLabel, type TrelloList } from 
 let trelloCredentials: { apiKey: string; token: string } | null = null;
 
 function loadTrelloCredentials() {
+  const envApiKey = process.env.TRELLO_API_KEY;
+  const envToken = process.env.TRELLO_TOKEN;
+
+  // Prioritize environment variables for production
+  if (envApiKey && envToken) {
+    trelloCredentials = { apiKey: envApiKey, token: envToken };
+    if (process.env.DEBUG_TRELLO === 'true') console.log("[SERVER] Trello credentials loaded from environment variables.");
+    return;
+  }
+
+  // Fallback to JSON file for local development
   const secretsPath = path.join(
     process.cwd(),
     "dev-untracked",
@@ -14,18 +25,12 @@ function loadTrelloCredentials() {
   try {
     const data = fs.readFileSync(secretsPath, "utf8");
     trelloCredentials = JSON.parse(data);
-    if (process.env.DEBUG_TRELLO === "true")
-      console.log("[SERVER] Trello credentials loaded successfully.");
+    if (process.env.DEBUG_TRELLO === 'true') console.log("[SERVER] Trello credentials loaded from dev-untracked/trello-secrets.json.");
   } catch (error) {
-    if (process.env.DEBUG_TRELLO === "true")
-      console.warn(
-        "[SERVER] Could not load Trello credentials from dev-untracked/trello-secrets.json:",
-        error instanceof Error ? error.message : String(error),
-      );
-    if (process.env.DEBUG_TRELLO === "true")
-      console.warn(
-        "[SERVER] Trello integration will require manual API Key and Token input if not using environment variables.",
-      );
+    if (process.env.DEBUG_TRELLO === 'true') console.warn(
+      "[SERVER] Could not load Trello credentials from environment variables or dev-untracked/trello-secrets.json:",
+      error instanceof Error ? error.message : String(error),
+    );
     trelloCredentials = null; // Ensure it's null if loading fails
   }
 }
