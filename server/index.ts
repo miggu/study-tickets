@@ -6,6 +6,49 @@ const PORT = Number(process.env.PORT || process.env.BACKEND_PORT || 3001);
 const app = express();
 app.use(express.json());
 
+const durationToSeconds = (duration?: string | null): number | null => {
+  if (!duration) return null;
+  const lower = duration.toLowerCase();
+  if (lower.includes("question")) return 0;
+
+  // mm:ss or hh:mm:ss
+  const colonParts = duration.split(":").map((p) => Number(p));
+  if (
+    colonParts.length >= 2 &&
+    colonParts.length <= 3 &&
+    !colonParts.some((n) => Number.isNaN(n))
+  ) {
+    if (colonParts.length === 3) {
+      return colonParts[0] * 3600 + colonParts[1] * 60 + colonParts[2];
+    }
+    return colonParts[0] * 60 + colonParts[1];
+  }
+
+  const hmsMatch = lower.match(
+    /(?:(\d+)\s*h)?\s*(?:(\d+)\s*m)?\s*(?:(\d+)\s*s)?/,
+  );
+  if (hmsMatch) {
+    const h = Number(hmsMatch[1] || 0);
+    const m = Number(hmsMatch[2] || 0);
+    const s = Number(hmsMatch[3] || 0);
+    if (
+      !Number.isNaN(h) &&
+      !Number.isNaN(m) &&
+      !Number.isNaN(s) &&
+      (h || m || s)
+    ) {
+      return h * 3600 + m * 60 + s;
+    }
+  }
+
+  const asNumber = Number(duration);
+  if (!Number.isNaN(asNumber) && asNumber > 0) {
+    return asNumber * 60;
+  }
+
+  return null;
+};
+
 type LessonDTO = {
   id: string;
   title: string;
@@ -192,6 +235,7 @@ app.post("/api/trello/create-board", async (req: Request, res: Response) => {
       `${TRELLO_API_URL}/boards?name=${encodeURIComponent(
         courseTitle,
       )}&key=${apiKey}&token=${token}&defaultLists=false&defaultLabels=true`, // Ensure default labels are created
+      { method: "POST" },
     );
     if (!boardResponse.ok) {
       const errorText = await boardResponse.text();
@@ -255,35 +299,70 @@ app.post("/api/trello/create-board", async (req: Request, res: Response) => {
       return { day: day.day, listId: dayLists.find(list => list.name === `Day ${day.day}`)!.id, sections: Array.from(sectionsMap.entries()) };
     });
 
-    // Step 5: Create cards, checklists, and checklist items
-    console.log("[TRELLO] Creating Section-Day cards and their checklists...");
-    const creationPromises = dailySections.flatMap(({ day, listId, sections }) => 
-      sections.map(async ([sectionTitle, lessons]) => {
-        // A. Determine if this card needs a red label
+    const formatDuration = (totalSeconds: number) => {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+  if (hours > 0) {
+    if (minutes > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${hours}h`;
+  }
+
+  return `${minutes}m`;
+};
+
+// ... inside the app.post endpoint
+
+    // Step 5: Create cards, checklists, and checklist items sequentially to avoid rate limits
+    console.log("[TRELLO] Creating Section-Day cards and their checklists sequentially...");
+    
+    const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+
+    for (const { day, listId, sections } of dailySections) {
+      for (const [sectionTitle, lessons] of sections) {
+        // A. Calculate total duration for this chunk of lessons
+        const totalSeconds = lessons.reduce(
+          (sum, lesson) => sum + (durationToSeconds(lesson.duration) ?? 0),
+          0,
+        );
+        const formattedDuration = formatDuration(totalSeconds);
+        const cardTitle = `${sectionTitle} - ${formattedDuration}`;
+
+        // B. Determine if this card needs a red label
         const hasLongLesson = lessons.some(
           (lesson) => (durationToSeconds(lesson.duration) ?? 0) > 600,
         );
         let cardUrl = `${TRELLO_API_URL}/cards?idList=${listId}&name=${encodeURIComponent(
-          `${sectionTitle} - Day ${day}`,
+          cardTitle,
         )}&key=${apiKey}&token=${token}`;
         if (redLabelId && hasLongLesson) {
           cardUrl += `&idLabels=${redLabelId}`;
         }
 
-        // B. Create the card for the daily section
+        // C. Create the card for the daily section
         const cardResponse = await fetch(cardUrl, { method: "POST" });
-        if (!cardResponse.ok) throw new Error(`Failed to create card for ${sectionTitle} - Day ${day}`);
+        if (!cardResponse.ok) {
+          const errorText = await cardResponse.text();
+          console.error(`[TRELLO] Raw card creation error for ${cardTitle}:`, errorText);
+          throw new Error(`Failed to create card for ${sectionTitle} - Day ${day}. Trello says: ${errorText}`);
+        }
         const card = await cardResponse.json();
 
-        // C. Create a checklist on that card
+        // D. Create a checklist on that card
         const checklistResponse = await fetch(
           `${TRELLO_API_URL}/checklists?idCard=${card.id}&name=Lessons&key=${apiKey}&token=${token}`,
           { method: "POST" },
         );
-        if (!checklistResponse.ok) throw new Error(`Failed to create checklist for ${card.name}`);
+        if (!checklistResponse.ok) {
+          const errorText = await checklistResponse.text();
+          console.error(`[TRELLO] Raw checklist creation error for card ${card.name}:`, errorText);
+          throw new Error(`Failed to create checklist for ${card.name}. Trello says: ${errorText}`);
+        }
         const checklist = await checklistResponse.json();
 
-        // D. Add all lessons for that daily section to the checklist in parallel
+        // E. Add all lessons for that daily section to the checklist in parallel
         const checklistItemPromises = lessons.map(lesson => 
           fetch(
             `${TRELLO_API_URL}/checklists/${checklist.id}/checkItems?name=${encodeURIComponent(
@@ -293,10 +372,12 @@ app.post("/api/trello/create-board", async (req: Request, res: Response) => {
           )
         );
         await Promise.all(checklistItemPromises);
-      })
-    );
+        
+        console.log(`[TRELLO] Finished processing card: ${card.name}`);
+        await delay(100); // Add a small delay to be polite to the API
+      }
+    }
 
-    await Promise.all(creationPromises);
     console.log(`[TRELLO] All cards and checklist items created.`);
 
     res.json({ ok: true, boardUrl: board.url });
