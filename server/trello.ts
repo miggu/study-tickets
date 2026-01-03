@@ -14,15 +14,18 @@ function loadTrelloCredentials() {
   try {
     const data = fs.readFileSync(secretsPath, "utf8");
     trelloCredentials = JSON.parse(data);
-    if (process.env.DEBUG_TRELLO === 'true') console.log("[SERVER] Trello credentials loaded successfully.");
+    if (process.env.DEBUG_TRELLO === "true")
+      console.log("[SERVER] Trello credentials loaded successfully.");
   } catch (error) {
-    if (process.env.DEBUG_TRELLO === 'true') console.warn(
-      "[SERVER] Could not load Trello credentials from dev-untracked/trello-secrets.json:",
-      error instanceof Error ? error.message : String(error),
-    );
-    if (process.env.DEBUG_TRELLO === 'true') console.warn(
-      "[SERVER] Trello integration will require manual API Key and Token input if not using environment variables.",
-    );
+    if (process.env.DEBUG_TRELLO === "true")
+      console.warn(
+        "[SERVER] Could not load Trello credentials from dev-untracked/trello-secrets.json:",
+        error instanceof Error ? error.message : String(error),
+      );
+    if (process.env.DEBUG_TRELLO === "true")
+      console.warn(
+        "[SERVER] Trello integration will require manual API Key and Token input if not using environment variables.",
+      );
     trelloCredentials = null; // Ensure it's null if loading fails
   }
 }
@@ -106,7 +109,7 @@ export const createTrelloBoardHandler = async (req: Request, res: Response) => {
   }
 
   // --- Debug File: Request Payload ---
-  if (process.env.DEBUG_TRELLO === 'true') {
+  if (process.env.DEBUG_TRELLO === "true") {
     try {
       const payloadPath = path.join(
         process.cwd(),
@@ -120,7 +123,10 @@ export const createTrelloBoardHandler = async (req: Request, res: Response) => {
       );
       console.log("[SERVER] Wrote Trello request payload to debug file.");
     } catch (debugError) {
-      console.warn("[SERVER] Failed to write Trello request debug file:", debugError);
+      console.warn(
+        "[SERVER] Failed to write Trello request debug file:",
+        debugError,
+      );
     }
   }
   // --- End Debug File ---
@@ -129,7 +135,8 @@ export const createTrelloBoardHandler = async (req: Request, res: Response) => {
 
   try {
     // Step 1: Create the board
-    if (process.env.DEBUG_TRELLO === 'true') console.log("[TRELLO] Creating board...");
+    if (process.env.DEBUG_TRELLO === "true")
+      console.log("[TRELLO] Creating board...");
     const boardResponse = await fetch(
       `${TRELLO_API_URL}/boards?name=${encodeURIComponent(
         courseTitle,
@@ -139,13 +146,16 @@ export const createTrelloBoardHandler = async (req: Request, res: Response) => {
     if (!boardResponse.ok) {
       const errorText = await boardResponse.text();
       console.error("[TRELLO] Raw error from Trello API:", errorText);
-      throw new Error(`Failed to create Trello board. Trello says: ${errorText}`);
+      throw new Error(
+        `Failed to create Trello board. Trello says: ${errorText}`,
+      );
     }
     const board = await boardResponse.json();
-    if (process.env.DEBUG_TRELLO === 'true') console.log(`[TRELLO] Board created with ID: ${board.id}`);
+    if (process.env.DEBUG_TRELLO === "true")
+      console.log(`[TRELLO] Board created with ID: ${board.id}`);
 
     // --- Debug File: Board Response ---
-    if (process.env.DEBUG_TRELLO === 'true') {
+    if (process.env.DEBUG_TRELLO === "true") {
       try {
         const responsePath = path.join(
           process.cwd(),
@@ -155,27 +165,41 @@ export const createTrelloBoardHandler = async (req: Request, res: Response) => {
         fs.writeFileSync(responsePath, JSON.stringify(board, null, 2), "utf8");
         console.log("[SERVER] Wrote Trello board response to debug file.");
       } catch (debugError) {
-        console.warn("[SERVER] Failed to write Trello response debug file:", debugError);
+        console.warn(
+          "[SERVER] Failed to write Trello response debug file:",
+          debugError,
+        );
       }
     }
     // --- End Debug File ---
 
     // Step 2: Get the board's labels to find the 'red' one
-    if (process.env.DEBUG_TRELLO === 'true') console.log("[TRELLO] Getting board labels...");
+    if (process.env.DEBUG_TRELLO === "true")
+      console.log("[TRELLO] Getting board labels...");
     const labelsResponse = await fetch(
       `${TRELLO_API_URL}/boards/${board.id}/labels?key=${apiKey}&token=${token}`,
     );
     if (!labelsResponse.ok) throw new Error("Failed to get board labels.");
+interface TrelloLabel {
+  id: string;
+  name: string;
+  color: string;
+}
+
+// ... later in the code ...
+
     const labels = await labelsResponse.json();
-    const redLabel = labels.find((label: any) => label.color === "red");
+    const redLabel = labels.find((label: TrelloLabel) => label.color === "red");
     const redLabelId = redLabel ? redLabel.id : null;
-    if (process.env.DEBUG_TRELLO === 'true') {
-      if (redLabelId) console.log(`[TRELLO] Found red label with ID: ${redLabelId}`);
+    if (process.env.DEBUG_TRELLO === "true") {
+      if (redLabelId)
+        console.log(`[TRELLO] Found red label with ID: ${redLabelId}`);
       else console.warn("[TRELLO] Could not find a default red label.");
     }
 
     // Step 3: Create all "Day" lists sequentially to preserve order
-    if (process.env.DEBUG_TRELLO === 'true') console.log("[TRELLO] Creating Day lists sequentially...");
+    if (process.env.DEBUG_TRELLO === "true")
+      console.log("[TRELLO] Creating Day lists sequentially...");
     const dayLists = [];
     for (const day of plan) {
       const listResponse = await fetch(
@@ -184,11 +208,13 @@ export const createTrelloBoardHandler = async (req: Request, res: Response) => {
         )}&idBoard=${board.id}&key=${apiKey}&token=${token}&pos=bottom`,
         { method: "POST" },
       );
-      if (!listResponse.ok) throw new Error(`Failed to create list for Day ${day.day}.`);
+      if (!listResponse.ok)
+        throw new Error(`Failed to create list for Day ${day.day}.`);
       const list = await listResponse.json();
       dayLists.push(list);
     }
-    if (process.env.DEBUG_TRELLO === 'true') console.log(`[TRELLO] ${dayLists.length} Day lists created.`);
+    if (process.env.DEBUG_TRELLO === "true")
+      console.log(`[TRELLO] ${dayLists.length} Day lists created.`);
 
     // Step 4: Group lessons by section for each day
     const dailySections = plan.map((day) => {
@@ -199,13 +225,20 @@ export const createTrelloBoardHandler = async (req: Request, res: Response) => {
         }
         sectionsMap.get(lesson.section)!.push(lesson);
       });
-      return { day: day.day, listId: dayLists.find(list => list.name === `Day ${day.day}`)!.id, sections: Array.from(sectionsMap.entries()) };
+      return {
+        day: day.day,
+        listId: dayLists.find((list) => list.name === `Day ${day.day}`)!.id,
+        sections: Array.from(sectionsMap.entries()),
+      };
     });
 
     // Step 5: Create cards, checklists, and checklist items sequentially to avoid rate limits
-    if (process.env.DEBUG_TRELLO === 'true') console.log("[TRELLO] Creating Section-Day cards and their checklists sequentially...");
-    
-    const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+    if (process.env.DEBUG_TRELLO === "true")
+      console.log(
+        "[TRELLO] Creating Section-Day cards and their checklists sequentially...",
+      );
+
+    const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
     for (const { day, listId, sections } of dailySections) {
       for (const [sectionTitle, lessons] of sections) {
@@ -232,8 +265,13 @@ export const createTrelloBoardHandler = async (req: Request, res: Response) => {
         const cardResponse = await fetch(cardUrl, { method: "POST" });
         if (!cardResponse.ok) {
           const errorText = await cardResponse.text();
-          console.error(`[TRELLO] Raw card creation error for ${cardTitle}:`, errorText);
-          throw new Error(`Failed to create card for ${sectionTitle} - Day ${day}. Trello says: ${errorText}`);
+          console.error(
+            `[TRELLO] Raw card creation error for ${cardTitle}:`,
+            errorText,
+          );
+          throw new Error(
+            `Failed to create card for ${sectionTitle} - Day ${day}. Trello says: ${errorText}`,
+          );
         }
         const card = await cardResponse.json();
 
@@ -244,28 +282,35 @@ export const createTrelloBoardHandler = async (req: Request, res: Response) => {
         );
         if (!checklistResponse.ok) {
           const errorText = await checklistResponse.text();
-          console.error(`[TRELLO] Raw checklist creation error for card ${card.name}:`, errorText);
-          throw new Error(`Failed to create checklist for ${card.name}. Trello says: ${errorText}`);
+          console.error(
+            `[TRELLO] Raw checklist creation error for card ${card.name}:`,
+            errorText,
+          );
+          throw new Error(
+            `Failed to create checklist for ${card.name}. Trello says: ${errorText}`,
+          );
         }
         const checklist = await checklistResponse.json();
 
         // E. Add all lessons for that daily section to the checklist in parallel
-        const checklistItemPromises = lessons.map(lesson => 
+        const checklistItemPromises = lessons.map((lesson) =>
           fetch(
             `${TRELLO_API_URL}/checklists/${checklist.id}/checkItems?name=${encodeURIComponent(
               `${lesson.title} - ${lesson.duration}`,
             )}&key=${apiKey}&token=${token}`,
             { method: "POST" },
-          )
+          ),
         );
         await Promise.all(checklistItemPromises);
-        
-        if (process.env.DEBUG_TRELLO === 'true') console.log(`[TRELLO] Finished processing card: ${card.name}`);
+
+        if (process.env.DEBUG_TRELLO === "true")
+          console.log(`[TRELLO] Finished processing card: ${card.name}`);
         await delay(100); // Add a small delay to be polite to the API
       }
     }
 
-    if (process.env.DEBUG_TRELLO === 'true') console.log(`[TRELLO] All cards and checklist items created.`);
+    if (process.env.DEBUG_TRELLO === "true")
+      console.log(`[TRELLO] All cards and checklist items created.`);
 
     res.json({ ok: true, boardUrl: board.url });
   } catch (error) {

@@ -4,9 +4,6 @@ import {
   type LessonDTO,
   type SectionDTO,
   type CourseDataDTO,
-  type CurriculumItem,
-  type CurriculumSection,
-  type CurriculumContext,
   type CurriculumResponse,
 } from "./types";
 
@@ -101,7 +98,8 @@ app.get("/api/curriculum", async (req: Request, res: Response) => {
     }
 
     const metaUrl = `https://www.udemy.com/api-2.0/courses/${slug}/?fields%5Bcourse%5D=id,title`;
-    if (process.env.DEBUG_CURRICULUM === 'true') console.log("[curriculum] GET course meta", metaUrl);
+    if (process.env.DEBUG_CURRICULUM === "true")
+      console.log("[curriculum] GET course meta", metaUrl);
     const courseMetaResp = await fetch(metaUrl);
     if (!courseMetaResp.ok) {
       const text = await courseMetaResp.text().catch(() => "");
@@ -133,7 +131,8 @@ app.get("/api/curriculum", async (req: Request, res: Response) => {
     }
 
     const curriculumUrl = `https://www.udemy.com/api-2.0/course-landing-components/${courseId}/me/?components=curriculum_context`;
-    if (process.env.DEBUG_CURRICULUM === 'true') console.log("[curriculum] GET curriculum", curriculumUrl);
+    if (process.env.DEBUG_CURRICULUM === "true")
+      console.log("[curriculum] GET curriculum", curriculumUrl);
     const curriculumResp = await fetch(curriculumUrl);
     if (!curriculumResp.ok) {
       const text = await curriculumResp.text().catch(() => "");
