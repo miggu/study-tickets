@@ -1,22 +1,23 @@
 import express, { type Request, type Response } from "express";
+
 const PORT = Number(process.env.PORT || process.env.BACKEND_PORT || 3001);
 const app = express();
 
-type Lesson = {
+type LessonDTO = {
   id: string;
   title: string;
   duration: string;
-  section?: string;
 };
 
-type CourseInfo = {
-  courseTitle?: string;
-  description?: string;
-  sectionCount?: number;
-  syllabusSections?: Array<{
-    name?: string;
-    timeRequired?: string;
-  }>;
+type SectionDTO = {
+  title: string;
+  timeRequired: string | undefined;
+  lessons: LessonDTO[];
+};
+
+type CourseDataDTO = {
+  courseTitle: string | undefined;
+  sections: SectionDTO[];
 };
 
 type CurriculumItem = {
@@ -63,47 +64,47 @@ const normalizeDuration = (maybeText?: string, seconds?: number | null) => {
   return formatted || "—";
 };
 
-const lessonsFromCurriculum = (
+const transformCurriculum = (
   data: CurriculumResponse,
   courseTitle?: string,
-): { lessons: Lesson[]; courseInfo: CourseInfo | null } => {
-  const lessons: Lesson[] = [];
+): CourseDataDTO => {
   const context = data.curriculum_context?.data || data.data;
-  const sections = context?.sections;
-  if (!Array.isArray(sections)) return { lessons, courseInfo: null };
+  const sections = context?.sections || [];
 
-  const courseInfo: CourseInfo = {
+  const transformedSections: SectionDTO[] = sections.map(
+    (section, sectionIndex) => {
+      const title =
+        section.title || section.name || `Section ${sectionIndex + 1}`;
+      const items = section.items || [];
+
+      const lessons: LessonDTO[] = items
+        .map((item, itemIndex) => {
+          const itemTitle = item.title || item.name;
+          if (!itemTitle) return null;
+          const duration =
+            item.content_summary ||
+            normalizeDuration(undefined, item.content_length) ||
+            "—";
+          return {
+            id: `${sectionIndex}-${itemIndex}-${itemTitle.trim()}`,
+            title: itemTitle.trim(),
+            duration,
+          };
+        })
+        .filter((lesson): lesson is LessonDTO => lesson !== null);
+
+      return {
+        title,
+        timeRequired: formatSeconds(section.content_length),
+        lessons,
+      };
+    },
+  );
+
+  return {
     courseTitle,
-    syllabusSections: [],
-    sectionCount: sections.length,
+    sections: transformedSections,
   };
-
-  sections.forEach((section, sectionIndex) => {
-    const title =
-      section.title || section.name || `Section ${sectionIndex + 1}`;
-    courseInfo.syllabusSections?.push({
-      name: title,
-      timeRequired: formatSeconds(section.content_length),
-    });
-    const items = section.items;
-    if (!Array.isArray(items)) return;
-    items.forEach((item, itemIndex) => {
-      const itemTitle = item.title || item.name;
-      if (!itemTitle) return;
-      const duration =
-        item.content_summary ||
-        normalizeDuration(undefined, item.content_length) ||
-        "—";
-      lessons.push({
-        id: `${sectionIndex}-${itemIndex}-${itemTitle.trim()}`,
-        title: itemTitle.trim(),
-        duration,
-        section: title?.trim(),
-      });
-    });
-  });
-
-  return { lessons, courseInfo };
 };
 
 app.get("/api/health", (_req: Request, res: Response) => {
@@ -183,11 +184,9 @@ app.get("/api/curriculum", async (req: Request, res: Response) => {
     }
 
     const curriculum = (await curriculumResp.json()) as CurriculumResponse;
-    const { lessons, courseInfo } = lessonsFromCurriculum(
-      curriculum,
-      courseMeta.title,
-    );
-    res.json({ lessons, courseInfo });
+    const courseData = transformCurriculum(curriculum, courseMeta.title);
+
+    res.json(courseData);
   } catch (error) {
     console.error("Curriculum fetch failed", target, error);
     res.status(500).send("Failed to fetch curriculum data");

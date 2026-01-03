@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   normalizeUdemyCourseUrl,
   udemyUrlToStorageKey,
   type Course,
   type CourseInfo,
-  type Lesson,
+  type Section,
 } from "./utils";
 import { LessonTable } from "./components/LessonTable";
 import { StudyPlan } from "./components/StudyPlan";
@@ -27,25 +27,49 @@ const fetchCourse = async (url: string): Promise<Course> => {
 };
 
 function App() {
-  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string>(
     "Ready. Paste a URL and extract.",
   );
-  const [courseInfo, setCourseInfo] = useState<CourseInfo | null>(null);
+  const [courseTitle, setCourseTitle] = useState<string | undefined>();
   const [readStorage, writeStorage] = useLocalStorage();
 
-  const loadCourse = (
-    { lessons, courseInfo }: Course,
-    source: "cache" | "api",
-  ) => {
-    setLessons(lessons);
-    setCourseInfo(courseInfo ?? null);
+  const lessons = useMemo(
+    () =>
+      sections.flatMap((section) =>
+        section.lessons.map((lesson) => ({
+          ...lesson,
+          section: section.title,
+        })),
+      ),
+    [sections],
+  );
+
+  const courseInfo: CourseInfo | null = useMemo(() => {
+    if (!sections.length) return null;
+    return {
+      courseTitle,
+      sectionCount: sections.length,
+      syllabusSections: sections.map((section) => ({
+        name: section.title,
+        timeRequired: section.timeRequired,
+      })),
+    };
+  }, [courseTitle, sections]);
+
+  const loadCourse = (course: Course, source: "cache" | "api") => {
+    setSections(course.sections || []);
+    setCourseTitle(course.courseTitle);
+    const lessonCount = (course.sections || []).reduce(
+      (sum, section) => sum + (section.lessons || []).length,
+      0,
+    );
     setStatus(
       source === "cache"
-        ? `Loaded ${lessons.length} lessons from cache.`
-        : `Done. Parsed ${lessons.length} lessons from API.`,
+        ? `Loaded ${lessonCount} lessons from cache.`
+        : `Done. Parsed ${lessonCount} lessons from API.`,
     );
   };
 
@@ -61,30 +85,30 @@ function App() {
     setError(null);
     setStatus("Fetching course via API…");
     setLoading(true);
-    setCourseInfo(null);
 
     try {
       const storageKey = udemyUrlToStorageKey(normalizedUrl);
       const cachedCourse = readStorage<Course>(storageKey);
-      if (cachedCourse) {
-        const { lessons, courseInfo } = cachedCourse;
-        if (Array.isArray(lessons) && lessons.length) {
-          loadCourse({ lessons, courseInfo }, "cache");
-          return;
-        }
+      if (
+        cachedCourse &&
+        Array.isArray(cachedCourse.sections) &&
+        cachedCourse.sections.length > 0
+      ) {
+        loadCourse(cachedCourse, "cache");
         return;
       }
 
-      const { lessons, courseInfo } = await fetchCourse(normalizedUrl);
-      if (!lessons.length) {
+      const course = await fetchCourse(normalizedUrl);
+      if (
+        !course ||
+        !Array.isArray(course.sections) ||
+        !course.sections.length
+      ) {
         throw new Error("Course API did not return any sections/items");
       }
 
-      loadCourse({ lessons, courseInfo }, "api");
-      writeStorage(storageKey, {
-        lessons,
-        courseInfo,
-      });
+      loadCourse(course, "api");
+      writeStorage(storageKey, course);
     } catch (err) {
       console.error(err);
       const message =
@@ -93,23 +117,28 @@ function App() {
           : "Could not read the URL. Try again or check your connection.";
       setError(message);
       setStatus("No lessons found.");
-      setLessons([]);
+      setSections([]);
     } finally {
       setLoading(false);
     }
   };
 
   const removeSection = (title: string) => {
-    setLessons((prev) => prev.filter((lesson) => lesson.section !== title));
+    setSections((prev) => prev.filter((section) => section.title !== title));
     setStatus(`Removed section "${title}".`);
   };
 
   const removeLesson = (id: string) => {
-    setLessons((prev) => prev.filter((lesson) => lesson.id !== id));
+    setSections((prev) =>
+      prev
+        .map((section) => ({
+          ...section,
+          lessons: section.lessons.filter((lesson) => lesson.id !== id),
+        }))
+        .filter((section) => section.lessons.length > 0),
+    );
     setStatus("Removed a lesson.");
   };
-
-  const { courseTitle } = courseInfo || {};
 
   return (
     <div className="app">
@@ -144,7 +173,7 @@ function App() {
             key={
               courseTitle ? `study-plan-${courseTitle}` : "study-plan-default"
             }
-            lessons={lessons}
+            sections={sections}
             loading={loading}
           />
         )}

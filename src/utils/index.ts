@@ -2,13 +2,23 @@ export type Lesson = {
   id: string;
   title: string;
   duration: string;
-  section?: string;
+};
+
+export type Section = {
+  title: string;
+  timeRequired: string | undefined;
+  lessons: Lesson[];
+};
+
+export type Course = {
+  courseTitle: string | undefined;
+  sections: Section[];
 };
 
 export type PlanDay = {
   day: number;
   totalSeconds: number;
-  lessons: Lesson[];
+  lessons: (Lesson & { section: string })[];
 };
 
 export type CourseInfo = {
@@ -19,11 +29,6 @@ export type CourseInfo = {
     name?: string;
     timeRequired?: string;
   }>;
-};
-
-export type Course = {
-  lessons: Lesson[];
-  courseInfo: CourseInfo | null;
 };
 
 export const formatSeconds = (seconds?: number | null) => {

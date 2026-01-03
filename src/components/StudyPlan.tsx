@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { usePlanBuilder } from "../hooks/usePlanBuilder";
-import { type Lesson } from "../utils";
+import { type Section } from "../utils";
 import { PlanDayCard } from "./PlanDayCard";
 
 type Props = {
-  lessons: Lesson[];
+  sections: Section[];
   loading?: boolean;
 };
 
-export function StudyPlan({ lessons, loading }: Props) {
+export function StudyPlan({ sections, loading }: Props) {
   const [dailyHours, setDailyHours] = useState<number>(2);
   const [planMessage, setPlanMessage] = useState<{
     text: string;
@@ -27,7 +27,7 @@ export function StudyPlan({ lessons, loading }: Props) {
 
     setPlanMessage(null); // Clear any previous error messages
 
-    const days = buildPlan(lessons, dailyHours);
+    const days = buildPlan(sections, dailyHours);
     setPlanMessage({
       text: `Built plan over ${days.length} day(s) at ${dailyHours}h/day.`,
       isError: false,

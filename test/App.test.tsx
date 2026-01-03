@@ -61,20 +61,20 @@ describe("App", () => {
       ok: true,
       json: () =>
         Promise.resolve({
-          lessons: [
+          courseTitle: "Test Course",
+          sections: [
             {
-              id: "1",
-              title: "Lesson 1",
-              duration: "00:05:00",
-              section: "Section A",
+              title: "Section A",
+              timeRequired: "5:00",
+              lessons: [
+                {
+                  id: "1",
+                  title: "Lesson 1",
+                  duration: "00:05:00",
+                },
+              ],
             },
           ],
-          courseInfo: {
-            courseTitle: "Test Course",
-            description: "A course for testing",
-            syllabusSections: [],
-            sectionCount: 1,
-          },
         }),
     });
 
