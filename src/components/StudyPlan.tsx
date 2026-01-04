@@ -16,6 +16,8 @@ export function StudyPlan({ sections, loading, courseTitle }: Props) {
     text: string;
     isError: boolean;
   } | null>(null);
+  const [trelloTitle, setTrelloTitle] = useState<string | null>(null);
+
   const { plan, buildPlan } = usePlanBuilder();
 
   const generatePlan = () => {
@@ -30,6 +32,8 @@ export function StudyPlan({ sections, loading, courseTitle }: Props) {
     setPlanMessage(null); // Clear any previous error messages
 
     const days = buildPlan(sections, dailyHours);
+    const title = `${courseTitle || "Study Plan"} in ${days.length} days at ${dailyHours}h/day`;
+    setTrelloTitle(title);
     setPlanMessage({
       text: `Built plan over ${days.length} day(s) at ${dailyHours}h/day.`,
       isError: false,
@@ -43,8 +47,8 @@ export function StudyPlan({ sections, loading, courseTitle }: Props) {
           <p className="hero__eyebrow">Study plan</p>
           <h2>Split by daily time</h2>
         </div>
-        {plan.length > 0 && (
-          <SendToTrello plan={plan} courseTitle={courseTitle || "Study Plan"} />
+        {plan.length > 0 && trelloTitle && (
+          <SendToTrello plan={plan} courseTitle={trelloTitle} />
         )}
       </div>
       <div className="plan__form">
@@ -64,7 +68,12 @@ export function StudyPlan({ sections, loading, courseTitle }: Props) {
               }
             }}
           />
-          <button type="button" onClick={generatePlan} disabled={loading} className="button-primary">
+          <button
+            type="button"
+            onClick={generatePlan}
+            disabled={loading}
+            className="button-primary"
+          >
             Build plan
           </button>
         </div>
