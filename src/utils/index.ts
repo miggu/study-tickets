@@ -149,4 +149,4 @@ export const normalizeUdemyCourseUrl = (
 };
 
 export const udemyUrlToStorageKey = (url: string) =>
-  `udemy-organise.course.${encodeURIComponent(url)}`;
+  `study-tickets.course.${encodeURIComponent(url)}`;
