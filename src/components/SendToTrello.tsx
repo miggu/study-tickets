@@ -48,28 +48,45 @@ export function SendToTrello({ plan, courseTitle }: Props) {
   };
 
   return (
-    <>
-      <button type="button" onClick={handleSendToTrello} disabled={loading} className="button-primary send-to-trello-button">
+    <div className="send-to-trello">
+      <button
+        type="button"
+        onClick={handleSendToTrello}
+        disabled={loading}
+        className="button-primary send-to-trello-button"
+      >
         {loading ? (
           "Sending..."
         ) : (
           <>
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
               {trello()}
             </svg>
             Send to Trello
           </>
         )}
       </button>
-      {error && <p className="plan__message--error">{error}</p>}
-      {boardUrl && (
-        <p className="plan__message">
-          Successfully created Trello board:{" "}
-          <a href={boardUrl} target="_blank" rel="noopener noreferrer">
-            {boardUrl}
-          </a>
-        </p>
-      )}
-    </>
+      <div className="send-to-trello__status" aria-live="polite">
+        {error && (
+          <p className="plan__message plan__message--error" role="alert">
+            {error}
+          </p>
+        )}
+        {boardUrl && (
+          <p className="plan__message">
+            Trello board created.{" "}
+            <a href={boardUrl} target="_blank" rel="noopener noreferrer">
+              Open board
+            </a>
+          </p>
+        )}
+      </div>
+    </div>
   );
 }

@@ -437,6 +437,33 @@
   gap: 10px;
 }
 
+.send-to-trello {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.send-to-trello__status {
+  min-height: 1.1rem;
+  text-align: right;
+}
+
+.send-to-trello__status .plan__message {
+  animation: trelloStatusFade 220ms ease-out;
+}
+
+@keyframes trelloStatusFade {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .send-to-trello-button {
   display: flex;
   align-items: center;
