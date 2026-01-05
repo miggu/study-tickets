@@ -1,6 +1,20 @@
-# Udemy Curriculum Planner
+# Study Tickets
 
-Turns a Udemy course URL into a structured lesson list and a daily study plan, then (optionally) pushes to Trello.
+Study Tickets helps you transform course curricula into personalized, manageable study plans, intelligently broken down by a specific daily time commitment you define (e.g., 1.5 hours, 1 hour). It then allows you to integrate these plans with organizing platforms.
+
+## Current Focus (MVP) & Future Vision
+
+Currently, Study Tickets is designed as a Minimum Viable Product (MVP) with a strong focus on:
+
+- **Course Content:** Integrating with **Udemy** to extract course curricula.
+- **Organization:** Sending structured study plans to **Trello** for easy management.
+
+This specific focus allows for a robust and polished experience with these services. However, the vision for Study Tickets is much broader. In the future, the application aims to expand its integrations significantly, supporting:
+
+- **More Course Platforms:** Beyond Udemy, to include other popular online learning platforms.
+- **Diverse Organizing Tools:** Integrating with a wider array of task managers and project management platforms, not just Trello.
+
+The goal is to evolve Study Tickets into a versatile tool for managing educational content and personal organization across various services.
 
 ## What it does
 
@@ -20,6 +34,8 @@ Turns a Udemy course URL into a structured lesson list and a daily study plan, t
 ## Environment
 
 - `.env` (optional): `PORT`/`BACKEND_PORT` to change backend port.
+- **Trello API Credentials:** For Trello integration, you need both an API Key and a Token. These can be provided via environment variables (`TRELLO_API_KEY`, `TRELLO_TOKEN`) or, for local development, in a `dev-untracked/trello-secrets.json` file (e.g., `{ "apiKey": "YOUR_API_KEY", "token": "YOUR_TOKEN" }`).
+- **Trello Debugging:** Set `DEBUG_TRELLO=true` in your `.env` file to enable detailed debugging messages from the Trello integration on the server.
 - No API keys required for Udemy curriculum fetch.
 
 ## Scripts
@@ -33,5 +49,7 @@ Turns a Udemy course URL into a structured lesson list and a daily study plan, t
 
 - Backend endpoints:
   - `GET /api/curriculum?url=<course_url>` → curriculum_context JSON.
+  - `POST /api/trello/create-board` → Creates a new Trello board with the study plan.
   - `GET /api/health` → simple ok check.
+- **Trello API Rate Limits:** Be aware that Trello's API has rate limits. When sending a large study plan, the server attempts to space out requests to avoid overwhelming the API, but very large plans or rapid successive calls may still encounter issues.
 - Study plan splits lessons sequentially into day buckets based on daily hours.
