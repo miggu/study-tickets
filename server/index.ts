@@ -159,8 +159,8 @@ app.get("/api/curriculum", async (req: Request, res: Response) => {
     const courseData = transformCurriculum(curriculum, courseMeta.title);
 
     res.json(courseData);
-  } catch (error) {
-    console.error("Curriculum fetch failed", target, error);
+  } catch (error: unknown) {
+    console.error("[curriculum] Curriculum fetch failed:", target, error);
     res.status(500).send("Failed to fetch curriculum data");
   }
 });
