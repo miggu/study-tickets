@@ -31,6 +31,31 @@ The goal is to evolve Study Tickets into a versatile tool for managing education
 3. Paste a Udemy course URL and click “Extract lessons.”
 4. Set “Daily hours” and build the study plan.
 
+## Docker
+
+You can also run Study Tickets using Docker for a consistent development environment.
+
+### 1. Build the image
+
+```bash
+docker build -t study-tickets .
+```
+
+### 2. Run the container
+
+The container is configured to wait for your command. You have two main options:
+
+- **Development Mode** (Hot-reloading):
+
+  ```bash
+  docker run -it -p 5173:5173 study-tickets npm run dev:full
+  ```
+
+- **Production Build** (Build the assets inside the container):
+  ```bash
+  docker run -it study-tickets npm run build
+  ```
+
 ## Environment
 
 - `.env` (optional): `PORT`/`BACKEND_PORT` to change backend port.
