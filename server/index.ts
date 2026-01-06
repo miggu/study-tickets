@@ -1,50 +1,17 @@
 import express, { type Request, type Response } from "express";
+import { createTrelloBoardHandler } from "./trello.js";
+import {
+  type LessonDTO,
+  type SectionDTO,
+  type CourseDataDTO,
+  type CurriculumItem,
+  type CurriculumSection,
+  type CurriculumResponse,
+} from "./types.js";
 
 const PORT = Number(process.env.PORT || process.env.BACKEND_PORT || 3001);
 const app = express();
-
-type LessonDTO = {
-  id: string;
-  title: string;
-  duration: string;
-};
-
-type SectionDTO = {
-  title: string;
-  timeRequired: string | undefined;
-  lessons: LessonDTO[];
-};
-
-type CourseDataDTO = {
-  courseTitle: string | undefined;
-  sections: SectionDTO[];
-};
-
-type CurriculumItem = {
-  title?: string;
-  name?: string;
-  content_summary?: string;
-  content_length?: number;
-};
-
-type CurriculumSection = {
-  title?: string;
-  name?: string;
-  content_length?: number;
-  items?: CurriculumItem[];
-};
-
-type CurriculumContext = {
-  title?: string;
-  sections?: CurriculumSection[];
-};
-
-type CurriculumResponse = {
-  curriculum_context?: {
-    data?: CurriculumContext;
-  };
-  data?: CurriculumContext;
-};
+app.use(express.json());
 
 const formatSeconds = (seconds?: number | null) => {
   if (seconds === undefined || seconds === null || Number.isNaN(seconds))
@@ -72,13 +39,13 @@ const transformCurriculum = (
   const sections = context?.sections || [];
 
   const transformedSections: SectionDTO[] = sections.map(
-    (section, sectionIndex) => {
+    (section: CurriculumSection, sectionIndex: number) => {
       const title =
         section.title || section.name || `Section ${sectionIndex + 1}`;
       const items = section.items || [];
 
       const lessons: LessonDTO[] = items
-        .map((item, itemIndex) => {
+        .map((item: CurriculumItem, itemIndex: number) => {
           const itemTitle = item.title || item.name;
           if (!itemTitle) return null;
           const duration =
@@ -89,9 +56,10 @@ const transformCurriculum = (
             id: `${sectionIndex}-${itemIndex}-${itemTitle.trim()}`,
             title: itemTitle.trim(),
             duration,
+            section: title, // Add section title here
           };
         })
-        .filter((lesson): lesson is LessonDTO => lesson !== null);
+        .filter((lesson: LessonDTO | null): lesson is LessonDTO => lesson !== null);
 
       return {
         title,
@@ -110,6 +78,8 @@ const transformCurriculum = (
 app.get("/api/health", (_req: Request, res: Response) => {
   res.json({ ok: true });
 });
+
+app.post("/api/trello/create-board", createTrelloBoardHandler);
 
 app.get("/api/curriculum", async (req: Request, res: Response) => {
   const target = req.query.url;
@@ -130,7 +100,8 @@ app.get("/api/curriculum", async (req: Request, res: Response) => {
     }
 
     const metaUrl = `https://www.udemy.com/api-2.0/courses/${slug}/?fields%5Bcourse%5D=id,title`;
-    console.log("[curriculum] Fetching course meta for slug:", slug);
+    if (process.env.DEBUG_CURRICULUM === "true")
+      console.log("[curriculum] GET course meta", metaUrl);
     const courseMetaResp = await fetch(metaUrl);
     if (!courseMetaResp.ok) {
       const text = await courseMetaResp.text().catch(() => "");
@@ -162,7 +133,8 @@ app.get("/api/curriculum", async (req: Request, res: Response) => {
     }
 
     const curriculumUrl = `https://www.udemy.com/api-2.0/course-landing-components/${courseId}/me/?components=curriculum_context`;
-    console.log("[curriculum] Fetching curriculum for course ID:", courseId);
+    if (process.env.DEBUG_CURRICULUM === "true")
+      console.log("[curriculum] GET curriculum", curriculumUrl);
     const curriculumResp = await fetch(curriculumUrl);
     if (!curriculumResp.ok) {
       const text = await curriculumResp.text().catch(() => "");
@@ -196,3 +168,4 @@ app.get("/api/curriculum", async (req: Request, res: Response) => {
 app.listen(PORT, () => {
   console.log(`[SERVER] Backend server listening on http://localhost:${PORT}`);
 });
+

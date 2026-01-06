@@ -34,7 +34,7 @@ export function CourseInput({
             placeholder="https://www.udemy.com/course/your-course"
             aria-label="Course URL"
           />
-          <button type="submit" disabled={loading}>
+          <button type="submit" disabled={loading} className="button-primary">
             {loading ? "Reading…" : "Extract lessons"}
           </button>
         </div>

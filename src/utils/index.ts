@@ -31,6 +31,7 @@ export type Lesson = {
   id: string;
   title: string;
   duration: string;
+  section: string; // Added section property
 };
 
 export type Section = {
@@ -148,4 +149,4 @@ export const normalizeUdemyCourseUrl = (
 };
 
 export const udemyUrlToStorageKey = (url: string) =>
-  `udemy-organise.course.${encodeURIComponent(url)}`;
+  `study-tickets.course.${encodeURIComponent(url)}`;

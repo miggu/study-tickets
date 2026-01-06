@@ -175,6 +175,7 @@ function App() {
             }
             sections={sections}
             loading={loading}
+            courseTitle={courseTitle}
           />
         )}
       </div>
