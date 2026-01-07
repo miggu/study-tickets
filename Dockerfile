@@ -11,5 +11,5 @@ COPY . .
 # Expose the app port
 EXPOSE 5173
 
-# Wait for external command (e.g. docker run ... npm run dev:full)
+# Wait for external command (e.g. docker run ... npm run dev)
 CMD ["sh"]

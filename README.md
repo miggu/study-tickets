@@ -25,7 +25,7 @@ The goal is to evolve Study Tickets into a versatile tool for managing education
 ## Getting started
 
 1. Install deps: `npm install`
-2. Run backend + frontend together: `npm run dev:full`
+2. Run backend + frontend together: `npm run dev`
    - Frontend: http://localhost:5173
    - Backend proxy: http://localhost:3001
 3. Paste a Udemy course URL and click “Extract lessons.”
@@ -48,7 +48,7 @@ The container is configured to wait for your command. You have two main options:
 - **Development Mode** (Hot-reloading):
 
   ```bash
-  docker run -it -p 5173:5173 study-tickets npm run dev:full
+  docker run -it -p 5173:5173 study-tickets npm run dev
   ```
 
 - **Production Build** (Build the assets inside the container):
@@ -65,8 +65,8 @@ The container is configured to wait for your command. You have two main options:
 
 ## Scripts
 
-- `npm run dev:full` – start backend + Vite dev server.
-- `npm run dev` – Vite only (requires backend running separately).
+- `npm run dev` – start backend + Vite dev server.
+- `npm run client` – Vite only (requires backend running separately).
 - `npm run server` – backend only.
 - `npm run build` – type-check + production build.
 
