@@ -5,7 +5,10 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "lib": ["ES2023", "DOM"],
-    "noEmit": true
+    "allowImportingTsExtensions": false,
+    "noEmit": false,
+    "rootDir": "server",
+    "outDir": "dist/server"
   },
   "include": ["server/**/*.ts"]
 }
