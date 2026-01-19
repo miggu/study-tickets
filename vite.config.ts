@@ -7,6 +7,11 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    // Keep Vite build output separate from the server build (Vite clears dist/).
+    build: {
+      outDir: "dist/client",
+    },
+    // Dev-only: proxy /api to the backend to avoid CORS and keep relative URLs.
     server: {
       proxy: {
         "/api": {

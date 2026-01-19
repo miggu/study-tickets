@@ -33,7 +33,8 @@ The goal is to evolve Study Tickets into a versatile tool for managing education
 
 ## Docker
 
-You can also run Study Tickets using Docker for a consistent development environment.
+You can run Study Tickets in Docker as a single container that serves both the
+frontend and backend.
 
 ### 1. Build the image
 
@@ -43,18 +44,11 @@ docker build -t study-tickets .
 
 ### 2. Run the container
 
-The container is configured to wait for your command. You have two main options:
+```bash
+docker run -it -p 8080:8080 study-tickets
+```
 
-- **Development Mode** (Hot-reloading):
-
-  ```bash
-  docker run -it -p 5173:5173 study-tickets npm run dev
-  ```
-
-- **Production Build** (Build the assets inside the container):
-  ```bash
-  docker run -it study-tickets npm run build
-  ```
+The app will be available at `http://localhost:8080`.
 
 ## Environment
 

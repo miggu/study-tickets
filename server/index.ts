@@ -1,4 +1,6 @@
 import express, { type Request, type Response } from "express";
+import fs from "node:fs";
+import path from "node:path";
 import { createTrelloBoardHandler } from "./trello.js";
 import {
   type LessonDTO,
@@ -12,6 +14,13 @@ import {
 const PORT = Number(process.env.PORT || process.env.BACKEND_PORT || 3001);
 const app = express();
 app.use(express.json());
+
+const clientDistPath = path.join(process.cwd(), "dist", "client");
+const clientIndexPath = path.join(clientDistPath, "index.html");
+const hasClientBuild = fs.existsSync(clientIndexPath);
+if (hasClientBuild) {
+  app.use(express.static(clientDistPath));
+}
 
 const formatSeconds = (seconds?: number | null) => {
   if (seconds === undefined || seconds === null || Number.isNaN(seconds))
@@ -59,7 +68,9 @@ const transformCurriculum = (
             section: title, // Add section title here
           };
         })
-        .filter((lesson: LessonDTO | null): lesson is LessonDTO => lesson !== null);
+        .filter(
+          (lesson: LessonDTO | null): lesson is LessonDTO => lesson !== null,
+        );
 
       return {
         title,
@@ -165,7 +176,12 @@ app.get("/api/curriculum", async (req: Request, res: Response) => {
   }
 });
 
+if (hasClientBuild) {
+  app.get(/^\/(?!api\/).*/, (_req: Request, res: Response) => {
+    res.sendFile(clientIndexPath);
+  });
+}
+
 app.listen(PORT, () => {
   console.log(`[SERVER] Backend server listening on http://localhost:${PORT}`);
 });
-

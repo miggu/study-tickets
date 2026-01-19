@@ -1,15 +1,18 @@
 FROM node:20-alpine
 WORKDIR /app
 
-# Copy package files and install all dependencies
+# Copy package files and install dependencies
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm ci
 
-# Copy everything
+# Copy app source and build frontend + backend
 COPY . .
+RUN npm run build
 
-# Expose the app port
-EXPOSE 5173
+ENV NODE_ENV=production
+ENV PORT=8080
 
-# Wait for external command (e.g. docker run ... npm run dev)
-CMD ["sh"]
+# Elastic Beanstalk expects the app to listen on 8080
+EXPOSE 8080
+
+CMD ["node", "dist/server/index.js"]
